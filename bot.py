@@ -303,13 +303,14 @@ async def order_item(callback: types.CallbackQuery):
     item = ALL_ITEMS.get(item_id)
 
     builder = InlineKeyboardBuilder()
+    builder.button(text="📲 Написати замовлення в чат", url="https://t.me/koyotcv")
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
     builder.adjust(1)
 
     await callback.message.answer(
         f"✅ Чудовий вибір!\n\n"
-        f"*{item['name']}* — {item['price']} ₴\n\n"
-        f"📍 Покажи цей екран на касі або назви замовлення співробітнику.\n\n"
+        f"🍽 *{item['name']}* — {item['price']} ₴\n\n"
+        f"Натисни кнопку нижче щоб написати нам замовлення в чат 👇\n\n"
         f"Смачного! 😋🐺",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
