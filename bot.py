@@ -145,19 +145,15 @@ async def start(message: types.Message):
 @dp.callback_query(F.data == "back_main")
 async def back_main(callback: types.CallbackQuery):
     try:
-        await callback.message.edit_text(
-            "🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
-            reply_markup=size_question_keyboard(),
-            parse_mode="Markdown"
-        )
-    except Exception:
         await callback.message.delete()
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
-            reply_markup=size_question_keyboard(),
-            parse_mode="Markdown"
-        )
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+        reply_markup=size_question_keyboard(),
+        parse_mode="Markdown"
+    )
 
 
 # ============================================
@@ -187,19 +183,15 @@ async def big_lavash(callback: types.CallbackQuery):
     builder.button(text="🔙 Назад", callback_data="menu_big")
     builder.adjust(1)
     try:
-        await callback.message.edit_text(
-            "🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
-    except Exception:
         await callback.message.delete()
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
 
 
 @dp.callback_query(F.data == "big_bulka")
@@ -211,19 +203,15 @@ async def big_bulka(callback: types.CallbackQuery):
     builder.button(text="🔙 Назад", callback_data="menu_big")
     builder.adjust(1)
     try:
-        await callback.message.edit_text(
-            "🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
-    except Exception:
         await callback.message.delete()
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
 
 
 # ============================================
@@ -253,19 +241,15 @@ async def mid_lavash(callback: types.CallbackQuery):
     builder.button(text="🔙 Назад", callback_data="menu_mid")
     builder.adjust(1)
     try:
-        await callback.message.edit_text(
-            "🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
-    except Exception:
         await callback.message.delete()
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
 
 
 @dp.callback_query(F.data == "mid_bulka")
@@ -277,19 +261,15 @@ async def mid_bulka(callback: types.CallbackQuery):
     builder.button(text="🔙 Назад", callback_data="menu_mid")
     builder.adjust(1)
     try:
-        await callback.message.edit_text(
-            "🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
-    except Exception:
         await callback.message.delete()
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
 
 
 # ============================================
