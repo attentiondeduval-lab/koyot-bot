@@ -341,6 +341,21 @@ async def order_item(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
 
+    # Через 2 секунди просимо залишити відгук
+    await asyncio.sleep(2)
+    review_builder = InlineKeyboardBuilder()
+    review_builder.button(text="⭐️ 1", callback_data="review_1")
+    review_builder.button(text="⭐️ 2", callback_data="review_2")
+    review_builder.button(text="⭐️ 3", callback_data="review_3")
+    review_builder.button(text="⭐️ 4", callback_data="review_4")
+    review_builder.button(text="⭐️ 5", callback_data="review_5")
+    review_builder.adjust(5)
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="💬 Як тобі наш сервіс?\nПостав оцінку від 1 до 5 ⭐️",
+        reply_markup=review_builder.as_markup()
+    )
+
 
 # ============================================
 #  СИСТЕМА РЕКОМЕНДАЦІЙ
@@ -404,6 +419,29 @@ async def r_light(callback: types.CallbackQuery):
 # ============================================
 #  ЗАПУСК
 # ============================================
+
+# ============================================
+#  ВІДГУКИ
+# ============================================
+
+REVIEW_TEXTS = {
+    "review_1": "😞 Дякуємо за відгук. Нам шкода що не виправдали очікувань — передамо команді!",
+    "review_2": "😕 Дякуємо! Будемо працювати краще 💪",
+    "review_3": "😊 Дякуємо за оцінку! Прагнемо до 5 зірок 🌟",
+    "review_4": "😃 Дякуємо! Раді що сподобалось 🐺",
+    "review_5": "🤩 Дякуємо! Ти найкращий клієнт! Чекаємо знову 🐺❤️",
+}
+
+@dp.callback_query(F.data.startswith("review_"))
+async def handle_review(callback: types.CallbackQuery):
+    stars = int(callback.data.split("_")[1])
+    text = REVIEW_TEXTS.get(callback.data, "Дякуємо!")
+    star_display = "⭐️" * stars + "☆" * (5 - stars)
+
+    await callback.message.edit_text(
+        f"{star_display}\n\n{text}"
+    )
+
 
 async def main():
     await dp.start_polling(bot)
