@@ -348,7 +348,7 @@ async def order_item(callback: types.CallbackQuery):
     item = ALL_ITEMS.get(item_id)
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="📲 Написати замовлення в чат", url="https://t.me/koyotcv")
+    builder.button(text="📲 Написати замовлення в чат", url="https://t.me/Dato5021990")
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
     builder.adjust(1)
 
