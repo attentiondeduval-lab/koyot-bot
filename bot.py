@@ -110,7 +110,7 @@ dp = Dispatcher()
 
 def size_question_keyboard():
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔴 Великий розмір", callback_data="menu_big")
+    builder.button(text="🔴 Великий розмір — БІГ МЕНЮ", callback_data="menu_big")
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.adjust(1)
@@ -144,11 +144,20 @@ async def start(message: types.Message):
 # --- НАЗАД В ГОЛОВНЕ МЕНЮ ---
 @dp.callback_query(F.data == "back_main")
 async def back_main(callback: types.CallbackQuery):
-    await callback.message.edit_text(
-        "🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
-        reply_markup=size_question_keyboard(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            "🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+            reply_markup=size_question_keyboard(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await callback.message.delete()
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+            reply_markup=size_question_keyboard(),
+            parse_mode="Markdown"
+        )
 
 
 # ============================================
@@ -177,11 +186,20 @@ async def big_lavash(callback: types.CallbackQuery):
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_lavash")
     builder.button(text="🔙 Назад", callback_data="menu_big")
     builder.adjust(1)
-    await callback.message.edit_text(
-        "🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            "🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await callback.message.delete()
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
 
 
 @dp.callback_query(F.data == "big_bulka")
@@ -192,11 +210,20 @@ async def big_bulka(callback: types.CallbackQuery):
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_bulka")
     builder.button(text="🔙 Назад", callback_data="menu_big")
     builder.adjust(1)
-    await callback.message.edit_text(
-        "🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            "🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await callback.message.delete()
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
 
 
 # ============================================
@@ -225,11 +252,20 @@ async def mid_lavash(callback: types.CallbackQuery):
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_lavash")
     builder.button(text="🔙 Назад", callback_data="menu_mid")
     builder.adjust(1)
-    await callback.message.edit_text(
-        "🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            "🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await callback.message.delete()
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
 
 
 @dp.callback_query(F.data == "mid_bulka")
@@ -240,11 +276,20 @@ async def mid_bulka(callback: types.CallbackQuery):
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_bulka")
     builder.button(text="🔙 Назад", callback_data="menu_mid")
     builder.adjust(1)
-    await callback.message.edit_text(
-        "🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            "🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await callback.message.delete()
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
 
 
 # ============================================
