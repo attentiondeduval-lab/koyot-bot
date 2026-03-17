@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import random
+import json
+import os
 from datetime import datetime, timezone, timedelta
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
@@ -140,6 +142,7 @@ def size_question_keyboard():
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
+    builder.button(text="📍 Ми на карті", url="https://maps.google.com/?q=Головна+Вулиця+185,+Чернівці")
     builder.adjust(1)
     return builder.as_markup()
 
@@ -469,8 +472,29 @@ SPIN_PRIZES = [
     {"text": "🍖 Подвійна порція м'яса в одне блюдо із середнього меню",  "emoji": "🍖", "chance": 25},
 ]
 
-# Хто вже крутив сьогодні
-spun_today = {}
+# Хто вже крутив сьогодні — зберігається у файл
+SPUN_FILE = "spun_today.json"
+
+def load_spun():
+    if os.path.exists(SPUN_FILE):
+        with open(SPUN_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_spun(data):
+    with open(SPUN_FILE, "w") as f:
+        json.dump(data, f)
+
+def has_spun_today(user_id):
+    data = load_spun()
+    today = str(datetime.now(timezone(timedelta(hours=3))).date())
+    return data.get(str(user_id)) == today
+
+def mark_spun_today(user_id):
+    data = load_spun()
+    today = str(datetime.now(timezone(timedelta(hours=3))).date())
+    data[str(user_id)] = today
+    save_spun(data)
 
 # Лічильник клієнтів {user_id: {"name": ..., "username": ..., "orders": [...], "count": N}}
 customers = {}
@@ -484,10 +508,8 @@ waiting_order = {}
 @dp.callback_query(F.data == "spin")
 async def spin_wheel(callback: types.CallbackQuery):
     user_id = callback.from_user.id
-    today = datetime.now(timezone(timedelta(hours=3))).date()
-
     # Перевіряємо чи вже крутив сьогодні
-    if spun_today.get(user_id) == str(today):
+    if has_spun_today(user_id):
         await callback.answer(
             "😅 Ти вже крутив колесо сьогодні! Повертайся завтра 🌙",
             show_alert=True
@@ -527,7 +549,7 @@ async def spin_wheel(callback: types.CallbackQuery):
     prize = random.choices(SPIN_PRIZES, weights=weights, k=1)[0]
 
     # Зберігаємо що вже крутив
-    spun_today[user_id] = str(today)
+    mark_spun_today(user_id)
 
     builder = InlineKeyboardBuilder()
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
