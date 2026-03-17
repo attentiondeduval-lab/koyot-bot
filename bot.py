@@ -405,13 +405,18 @@ async def order_item(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "recommend")
 async def recommend(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔥 Дуже голодний",       callback_data="r_hungry")
+    builder.button(text="👉 🔥 Дуже голодний ← популярний вибір", callback_data="r_hungry")
     builder.button(text="😊 Середній апетит",     callback_data="r_medium")
     builder.button(text="🥗 Хочу щось легке",     callback_data="r_light")
     builder.button(text="🔙 Назад",               callback_data="back_main")
     builder.adjust(1)
-    await callback.message.edit_text(
-        "🎯 Допоможу вибрати!\n\nЯк ти зараз себе почуваєш?",
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🎯 Допоможу вибрати!\n\nЯк ти зараз себе почуваєш?",
         reply_markup=builder.as_markup()
     )
 
