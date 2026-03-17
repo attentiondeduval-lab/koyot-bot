@@ -8,6 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 #  ШАГ 1: ВСТАВЬ СВОЙ ТОКЕН СЮДА
 # ============================================
 TOKEN = "8605749499:AAGBfqpuaLuX-EtfXf_HQMsd2ZIQp-n8Ar4"
+ADMIN_ID = 5320781358  # Сюди приходять відгуки
 
 # ============================================
 #  ШАГ 2: ВСТАВЬ ССЫЛКИ НА ФОТО
@@ -438,8 +439,20 @@ async def handle_review(callback: types.CallbackQuery):
     text = REVIEW_TEXTS.get(callback.data, "Дякуємо!")
     star_display = "⭐️" * stars + "☆" * (5 - stars)
 
+    # Відповідь клієнту
     await callback.message.edit_text(
         f"{star_display}\n\n{text}"
+    )
+
+    # Надсилаємо відгук адміну
+    username = f"@{callback.from_user.username}" if callback.from_user.username else f"ID: {callback.from_user.id}"
+    first_name = callback.from_user.first_name or ""
+    await bot.send_message(
+        chat_id=ADMIN_ID,
+        text=f"⭐️ *Новий відгук!*\n\n"
+             f"Від: {first_name} {username}\n"
+             f"Оцінка: {star_display} {stars}/5",
+        parse_mode="Markdown"
     )
 
 
