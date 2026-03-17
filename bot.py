@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timezone, timedelta
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -109,6 +110,29 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 
+def get_status():
+    # Часовий пояс Київ (UTC+2 / UTC+3 влітку)
+    tz = timezone(timedelta(hours=3))
+    now = datetime.now(tz)
+    weekday = now.weekday()  # 0=Пн, 6=Нд
+    hour = now.hour
+    minute = now.minute
+    time_now = hour * 60 + minute
+
+    # Пн-Пт 10:00-21:00
+    is_workday = weekday <= 4  # Пн-Пт
+    is_open_time = 10 * 60 <= time_now < 21 * 60
+
+    if is_workday and is_open_time:
+        return "🟢 *ВІДКРИТО* · Працюємо до 21:00"
+    elif weekday >= 5:
+        return "🔴 *ЗАЧИНЕНО* · Вихідний день"
+    elif time_now < 10 * 60:
+        return "🔴 *ЗАЧИНЕНО* · Відкриємось о 10:00"
+    else:
+        return "🔴 *ЗАЧИНЕНО* · Відкриємось завтра о 10:00"
+
+
 def size_question_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text="🔴 Великий розмір — БІГ МЕНЮ", callback_data="menu_big")
@@ -130,13 +154,13 @@ def main_menu_keyboard():
 @dp.message(CommandStart())
 async def start(message: types.Message):
     await message.answer(
-        "👋 Привіт! Ласкаво просимо до *KOYOT* 🐺\n\n"
-        "Я допоможу тобі вибрати смачне замовлення!\n\n"
-        "🕐 *Години роботи:*\n"
-        "Пн–Пт: 10:00 – 21:00\n\n"
-        "📞 *Телефон:* 099 054 45 35\n\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+        f"👋 Привіт! Ласкаво просимо до *KOYOT* 🐺\n\n"
+        f"{get_status()}\n\n"
+        f"🕐 *Години роботи:*\n"
+        f"Пн–Пт: 10:00 – 21:00\n\n"
+        f"📞 *Телефон:* 099 054 45 35\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
         reply_markup=size_question_keyboard(),
         parse_mode="Markdown"
     )
