@@ -474,19 +474,33 @@ async def spin_wheel(callback: types.CallbackQuery):
         )
         return
 
-    # Анімація крутіння
+    # Анімація рулетки
     await callback.message.delete()
     msg = await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🎰 Крутимо колесо удачі..."
+        text="🎰 Запускаємо рулетку..."
     )
-    await asyncio.sleep(1)
-    await msg.edit_text("🎰 ⠋ Крутимо...")
-    await asyncio.sleep(0.7)
-    await msg.edit_text("🎰 ⠙ Майже...")
-    await asyncio.sleep(0.7)
-    await msg.edit_text("🎰 ⠸ Ще трішки...")
-    await asyncio.sleep(0.7)
+
+    # Всі символи рулетки
+    symbols = ["🔥", "🎉", "🥤", "🍖", "⭐️", "💥", "🌀", "🎯"]
+
+    # Швидке прокручування
+    for i in range(12):
+        s1 = symbols[i % len(symbols)]
+        s2 = symbols[(i + 2) % len(symbols)]
+        s3 = symbols[(i + 4) % len(symbols)]
+        frame = "🎰 *Рулетка крутиться...*\n\n┌───────────┐\n│ " + s1 + " │ " + s2 + " │ " + s3 + " │\n└───────────┘\n\n⏳ Зачекай..."
+        await msg.edit_text(frame, parse_mode="Markdown")
+        await asyncio.sleep(0.15 + i * 0.04)
+
+    # Уповільнення перед результатом
+    for i in range(4):
+        s1 = symbols[(i * 3) % len(symbols)]
+        s2 = symbols[(i * 3 + 1) % len(symbols)]
+        s3 = symbols[(i * 3 + 2) % len(symbols)]
+        frame2 = "🎰 *Майже...*\n\n┌───────────┐\n│ " + s1 + " │ " + s2 + " │ " + s3 + " │\n└───────────┘\n\n🎯 Зупиняємось..."
+        await msg.edit_text(frame2, parse_mode="Markdown")
+        await asyncio.sleep(0.4 + i * 0.2)
 
     # Визначаємо приз
     weights = [p["chance"] for p in SPIN_PRIZES]
@@ -499,7 +513,16 @@ async def spin_wheel(callback: types.CallbackQuery):
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
     builder.adjust(1)
 
-    result_text = "🎰 *Результат!*\n\n" + prize['emoji'] + " *" + prize['text'] + "*\n\n📍 Покажи цей екран на касі!"
+    e = prize['emoji']
+    result_text = (
+        "🎰 *РЕЗУЛЬТАТ!*\n\n"
+        "┌─────────────┐\n"
+        f"│  {e}  │  {e}  │  {e}  │\n"
+        "└─────────────┘\n\n"
+        "🏆 *Ти виграв:*\n"
+        f"{prize['text']}\n\n"
+        "📍 _Покажи цей екран на касі!_"
+    )
     await msg.edit_text(
         result_text,
         reply_markup=builder.as_markup(),
