@@ -457,27 +457,75 @@ REVIEW_TEXTS = {
     "review_5": "🤩 Дякуємо! Ти найкращий клієнт! Чекаємо знову 🐺❤️",
 }
 
+# Зберігаємо оцінки користувачів поки вони пишуть текст
+user_stars = {}
+
 @dp.callback_query(F.data.startswith("review_"))
 async def handle_review(callback: types.CallbackQuery):
     stars = int(callback.data.split("_")[1])
-    text = REVIEW_TEXTS.get(callback.data, "Дякуємо!")
     star_display = "⭐️" * stars + "☆" * (5 - stars)
 
-    # Відповідь клієнту
+    # Зберігаємо оцінку
+    user_stars[callback.from_user.id] = stars
+
+    # Просимо написати коментар
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⏭ Пропустити", callback_data="review_skip")
+    builder.adjust(1)
+
     await callback.message.edit_text(
-        f"{star_display}\n\n{text}"
+        f"{star_display}\n\n"
+        f"Дякуємо за оцінку! 🙏\n\n"
+        f"✍️ Хочеш залишити коментар? Напиши що думаєш про нас!\n"
+        f"(або натисни Пропустити)",
+        reply_markup=builder.as_markup()
     )
 
-    # Надсилаємо відгук адміну
+
+@dp.callback_query(F.data == "review_skip")
+async def review_skip(callback: types.CallbackQuery):
+    stars = user_stars.get(callback.from_user.id, 5)
+    star_display = "⭐️" * stars + "☆" * (5 - stars)
+    text = REVIEW_TEXTS.get(f"review_{stars}", "Дякуємо!")
+
+    await callback.message.edit_text(f"{star_display}\n\n{text}")
+
+    # Надсилаємо адміну без коментаря
     username = f"@{callback.from_user.username}" if callback.from_user.username else f"ID: {callback.from_user.id}"
     first_name = callback.from_user.first_name or ""
     await bot.send_message(
         chat_id=ADMIN_ID,
         text=f"⭐️ *Новий відгук!*\n\n"
              f"Від: {first_name} {username}\n"
-             f"Оцінка: {star_display} {stars}/5",
+             f"Оцінка: {star_display} {stars}/5\n"
+             f"Коментар: —",
         parse_mode="Markdown"
     )
+    user_stars.pop(callback.from_user.id, None)
+
+
+@dp.message(lambda message: message.from_user.id in user_stars)
+async def handle_review_text(message: types.Message):
+    stars = user_stars.get(message.from_user.id, 5)
+    star_display = "⭐️" * stars + "☆" * (5 - stars)
+    text = REVIEW_TEXTS.get(f"review_{stars}", "Дякуємо!")
+    comment = message.text
+
+    # Відповідь клієнту
+    await message.answer(f"{star_display}\n\n{text}\n\nТвій відгук записано! 📝")
+
+    # Надсилаємо адміну з коментарем
+    username = f"@{message.from_user.username}" if message.from_user.username else f"ID: {message.from_user.id}"
+    first_name = message.from_user.first_name or ""
+    await bot.send_message(
+        chat_id=ADMIN_ID,
+        text=f"⭐️ *Новий відгук!*\n\n"
+             f"Від: {first_name} {username}\n"
+             f"Оцінка: {star_display} {stars}/5\n"
+             f"💬 Коментар: _{comment}_",
+        parse_mode="Markdown"
+    )
+    user_stars.pop(message.from_user.id, None)
 
 
 async def main():
