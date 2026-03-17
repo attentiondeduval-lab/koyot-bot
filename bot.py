@@ -370,21 +370,12 @@ async def order_item(callback: types.CallbackQuery):
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
     builder.adjust(1)
 
-    # Просимо написати деталі замовлення
-    waiting_order[uid] = {"item": item['name'], "price": item['price']}
-
-    cancel_builder = InlineKeyboardBuilder()
-    cancel_builder.button(text="❌ Скасувати", callback_data="cancel_order")
-    cancel_builder.adjust(1)
-
     await callback.message.answer(
         f"✅ Чудовий вибір!\n\n"
         f"🍽 *{item['name']}* — {item['price']} ₴\n\n"
-        f"✍️ Напиши деталі замовлення:\n"
-        f"• Своє ім'я\n"
-        f"• Побажання (без цибулі, гострий соус і т.д.)\n\n"
-        f"Наприклад: _Іван, без цибулі_",
-        reply_markup=cancel_builder.as_markup(),
+        f"Натисни кнопку нижче щоб написати нам замовлення в чат 👇\n\n"
+        f"Смачного! 😋🐺",
+        reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
 
