@@ -354,17 +354,37 @@ async def order_item(callback: types.CallbackQuery):
     item_id = callback.data.split("|")[1]
     item = ALL_ITEMS.get(item_id)
 
+    # Записуємо клієнта
+    uid = callback.from_user.id
+    name = callback.from_user.first_name or "—"
+    username = f"@{callback.from_user.username}" if callback.from_user.username else "немає"
+    tz = timezone(timedelta(hours=3))
+    order_time = datetime.now(tz).strftime("%d.%m.%Y %H:%M")
+    if uid not in customers:
+        customers[uid] = {"name": name, "username": username, "orders": [], "count": 0}
+    customers[uid]["orders"].append(f"{item['name']} — {order_time}")
+    customers[uid]["count"] += 1
+
     builder = InlineKeyboardBuilder()
     builder.button(text="📲 Написати замовлення в чат", url="https://t.me/koyot_cv")
     builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
     builder.adjust(1)
 
+    # Просимо написати деталі замовлення
+    waiting_order[uid] = {"item": item['name'], "price": item['price']}
+
+    cancel_builder = InlineKeyboardBuilder()
+    cancel_builder.button(text="❌ Скасувати", callback_data="cancel_order")
+    cancel_builder.adjust(1)
+
     await callback.message.answer(
         f"✅ Чудовий вибір!\n\n"
         f"🍽 *{item['name']}* — {item['price']} ₴\n\n"
-        f"Натисни кнопку нижче щоб написати нам замовлення в чат 👇\n\n"
-        f"Смачного! 😋🐺",
-        reply_markup=builder.as_markup(),
+        f"✍️ Напиши деталі замовлення:\n"
+        f"• Своє ім'я\n"
+        f"• Побажання (без цибулі, гострий соус і т.д.)\n\n"
+        f"Наприклад: _Іван, без цибулі_",
+        reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
 
@@ -460,6 +480,15 @@ SPIN_PRIZES = [
 
 # Хто вже крутив сьогодні
 spun_today = {}
+
+# Лічильник клієнтів {user_id: {"name": ..., "username": ..., "orders": [...], "count": N}}
+customers = {}
+
+# Очікуючі замовлення {username: {"user_id": ..., "name": ..., "text": ..., "item": ...}}
+pending_orders = {}
+
+# Хто зараз вводить замовлення
+waiting_order = {}
 
 @dp.callback_query(F.data == "spin")
 async def spin_wheel(callback: types.CallbackQuery):
@@ -621,6 +650,156 @@ async def handle_review_text(message: types.Message):
         parse_mode="Markdown"
     )
     user_stars.pop(message.from_user.id, None)
+
+
+# ============================================
+#  СИСТЕМА ЗАМОВЛЕНЬ
+# ============================================
+
+@dp.callback_query(F.data == "cancel_order")
+async def cancel_order(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    waiting_order.pop(uid, None)
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text="❌ Замовлення скасовано.",
+        reply_markup=size_question_keyboard()
+    )
+
+
+@dp.message(lambda m: m.from_user.id in waiting_order and m.from_user.id not in user_stars)
+async def receive_order_text(message: types.Message):
+    uid = message.from_user.id
+    order_data = waiting_order.pop(uid, {})
+    item_name = order_data.get("item", "—")
+    item_price = order_data.get("price", "—")
+    details = message.text
+    name = message.from_user.first_name or "—"
+    username = message.from_user.username or ""
+    username_str = f"@{username}" if username else f"ID:{uid}"
+
+    # Зберігаємо замовлення
+    pending_orders[username_str] = {
+        "user_id": uid,
+        "name": name,
+        "item": item_name,
+        "price": item_price,
+        "details": details,
+        "username_str": username_str
+    }
+
+    # Повідомляємо клієнта
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
+    builder.adjust(1)
+    await message.answer(
+        f"📨 *Замовлення відправлено!*\n\n"
+        f"🍽 {item_name} — {item_price} ₴\n"
+        f"📝 {details}\n\n"
+        f"⏳ Очікуй підтвердження від закладу...",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+    # Повідомляємо адміна
+    admin_text = (
+        "🔔 *Нове замовлення!*\n\n"
+        "👤 Клієнт: " + name + " " + username_str + "\n"
+        "🍽 Страва: " + item_name + " — " + str(item_price) + " ₴\n"
+        "📝 Деталі: " + details + "\n\n"
+        "✅ Для підтвердження напиши:\n"
+        "/order " + username_str
+    )
+    await bot.send_message(
+        chat_id=ADMIN_ID,
+        text=admin_text,
+        parse_mode="Markdown"
+    )
+
+
+@dp.message(lambda m: m.text and m.text.startswith("/order") and m.from_user.id == ADMIN_ID)
+async def confirm_order(message: types.Message):
+    parts = message.text.split()
+    if len(parts) < 2:
+        await message.answer("❗️ Використання: /order @username або /order ID:12345")
+        return
+
+    username_str = parts[1]
+    order = pending_orders.pop(username_str, None)
+
+    if not order:
+        await message.answer(f"❗️ Замовлення від {username_str} не знайдено.")
+        return
+
+    # Повідомляємо клієнта
+    await bot.send_message(
+        chat_id=order["user_id"],
+        text=f"🎉 *Твоє замовлення прийнято!*\n\n"
+             f"🍽 *{order['item']}* — {order['price']} ₴\n"
+             f"📝 {order['details']}\n\n"
+             f"⏰ Очікуй — ми вже готуємо!\n"
+             f"Смачного! 😋🐺",
+        parse_mode="Markdown"
+    )
+
+    # Записуємо в лічильник
+    uid = order["user_id"]
+    tz = timezone(timedelta(hours=3))
+    order_time = datetime.now(tz).strftime("%d.%m.%Y %H:%M")
+    if uid not in customers:
+        customers[uid] = {"name": order["name"], "username": username_str, "orders": [], "count": 0}
+    customers[uid]["orders"].append(f"{order['item']} — {order_time}")
+    customers[uid]["count"] += 1
+
+    await message.answer(f"✅ Замовлення {username_str} підтверджено!")
+
+
+# ============================================
+#  СТАТИСТИКА ДЛЯ АДМІНА
+# ============================================
+
+@dp.message(lambda m: m.text == "/stats" and m.from_user.id == ADMIN_ID)
+async def show_stats(message: types.Message):
+    if not customers:
+        await message.answer("📊 Поки що замовлень немає.")
+        return
+
+    total_orders = sum(c["count"] for c in customers.values())
+    total_clients = len(customers)
+
+    text = f"📊 *Статистика KOYOT*\n\n"
+    text += f"👥 Всього клієнтів: *{total_clients}*\n"
+    text += f"🛒 Всього замовлень: *{total_orders}*\n\n"
+    text += "─────────────────\n"
+
+    # Топ 10 клієнтів
+    sorted_customers = sorted(customers.items(), key=lambda x: x[1]["count"], reverse=True)[:10]
+    for i, (uid, data) in enumerate(sorted_customers, 1):
+        last_order = data["orders"][-1].split(" — ")[-1] if data["orders"] else "—"
+        text += f"{i}. *{data['name']}* {data['username']}\n"
+        text += f"   🛒 Замовлень: {data['count']} · Останнє: {last_order}\n"
+
+    await message.answer(text, parse_mode="Markdown")
+
+
+@dp.message(lambda m: m.text == "/clients" and m.from_user.id == ADMIN_ID)
+async def show_clients(message: types.Message):
+    if not customers:
+        await message.answer("👥 Поки що клієнтів немає.")
+        return
+
+    text = "👥 *Всі клієнти:*\n\n"
+    for uid, data in customers.items():
+        text += f"• *{data['name']}* {data['username']}\n"
+        for order in data["orders"][-3:]:  # Останні 3 замовлення
+            text += f"  └ {order}\n"
+        text += "\n"
+
+    await message.answer(text, parse_mode="Markdown")
 
 
 async def main():
