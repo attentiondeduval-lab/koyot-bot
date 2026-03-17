@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 from datetime import datetime, timezone, timedelta
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
@@ -138,6 +139,7 @@ def size_question_keyboard():
     builder.button(text="🔴 Великий розмір — БІГ МЕНЮ", callback_data="menu_big")
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
+    builder.button(text="🎰 Крутилка удачі", callback_data="spin")
     builder.adjust(1)
     return builder.as_markup()
 
@@ -444,6 +446,76 @@ async def r_light(callback: types.CallbackQuery):
 # ============================================
 #  ЗАПУСК
 # ============================================
+
+# ============================================
+#  КРУТИЛКА УДАЧІ
+# ============================================
+
+SPIN_PRIZES = [
+    {"text": "-7% на всі страви з БІГ МЕНЮ 🔥",                          "emoji": "🔥", "chance": 25},
+    {"text": "-5% на всі позиції з СЕРЕДНЬОГО МЕНЮ 🎉",                   "emoji": "🎉", "chance": 25},
+    {"text": "🥤 Напій у подарунок при замовленні на суму понад 1000 грн", "emoji": "🥤", "chance": 25},
+    {"text": "🍖 Подвійна порція м'яса в одне блюдо із середнього меню",  "emoji": "🍖", "chance": 25},
+]
+
+# Хто вже крутив сьогодні
+spun_today = {}
+
+@dp.callback_query(F.data == "spin")
+async def spin_wheel(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    today = datetime.now(timezone(timedelta(hours=3))).date()
+
+    # Перевіряємо чи вже крутив сьогодні
+    if spun_today.get(user_id) == str(today):
+        await callback.answer(
+            "😅 Ти вже крутив колесо сьогодні! Повертайся завтра 🌙",
+            show_alert=True
+        )
+        return
+
+    # Анімація крутіння
+    await callback.message.delete()
+    msg = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text="🎰 Крутимо колесо удачі..."
+    )
+    await asyncio.sleep(1)
+    await msg.edit_text("🎰 ⠋ Крутимо...")
+    await asyncio.sleep(0.7)
+    await msg.edit_text("🎰 ⠙ Майже...")
+    await asyncio.sleep(0.7)
+    await msg.edit_text("🎰 ⠸ Ще трішки...")
+    await asyncio.sleep(0.7)
+
+    # Визначаємо приз
+    weights = [p["chance"] for p in SPIN_PRIZES]
+    prize = random.choices(SPIN_PRIZES, weights=weights, k=1)[0]
+
+    # Зберігаємо що вже крутив
+    spun_today[user_id] = str(today)
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
+    builder.adjust(1)
+
+    result_text = "🎰 *Результат!*\n\n" + prize['emoji'] + " *" + prize['text'] + "*\n\n📍 Покажи цей екран на касі!"
+    await msg.edit_text(
+        result_text,
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+    # Повідомляємо адміна
+    username = f"@{callback.from_user.username}" if callback.from_user.username else f"ID: {user_id}"
+    first_name = callback.from_user.first_name or ""
+    admin_text = "🎰 *Крутилка!*\n\nВід: " + first_name + " " + username + "\nВиграш: " + prize['text']
+    await bot.send_message(
+        chat_id=ADMIN_ID,
+        text=admin_text,
+        parse_mode="Markdown"
+    )
+
 
 # ============================================
 #  ВІДГУКИ
