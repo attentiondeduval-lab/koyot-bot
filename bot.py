@@ -142,7 +142,7 @@ def size_question_keyboard():
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
-    builder.button(text="📍 Ми на карті", url="https://maps.google.com/?cid=418072204929969671")
+    builder.button(text="📍 Ми на карті", url="https://www.google.com/maps/place/Койот/@48.2705655,25.9476903,17z/data=!3m1!4b1!4m6!3m5!1s0x473408ce52a8dd21:0x5cd4a749150ae07!8m2!3d48.2705655!4d25.9476903")
     builder.adjust(1)
     return builder.as_markup()
 
