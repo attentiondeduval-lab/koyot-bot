@@ -367,33 +367,14 @@ async def show_dish(callback: types.CallbackQuery):
         )
         return
 
-    # Перевіряємо чи заклад відкритий
-    if not state["is_open"]:
-        builder_closed = InlineKeyboardBuilder()
-        builder_closed.button(text="🏠 Головне меню", callback_data="back_main")
-        builder_closed.adjust(1)
-        try:
-            await callback.message.delete()
-        except Exception:
-            pass
-        await bot.send_message(
-            chat_id=callback.message.chat.id,
-            text="🔴 *Замовлення зараз недоступні.*\n\n"
-                 "Заклад тимчасово не приймає замовлення через бота.\n"
-                 "Зателефонуйте нам: 099 054 45 35",
-            reply_markup=builder_closed.as_markup(),
-            parse_mode="Markdown"
-        )
-        return
-
     cart_count = len(cart.get(callback.from_user.id, []))
     cart_label = f"🛒 Кошик ({cart_count})" if cart_count > 0 else "🛒 Кошик"
     builder = InlineKeyboardBuilder()
     if state["is_open"]:
         builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
-        builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
     else:
-        builder.button(text="⚠️ Зараз закрито",     callback_data="closed_info")
+        builder.button(text="⚠️ Зараз закрито — замовлення недоступні", callback_data="closed_info")
+    builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
     builder.button(text=cart_label,              callback_data="view_cart")
     builder.button(text="🔙 Назад",              callback_data=back_cat)
     builder.button(text="🏠 Головне меню",       callback_data="back_main")
@@ -869,9 +850,6 @@ async def confirm_order(message: types.Message):
 
 @dp.callback_query(F.data.startswith("addcart|"))
 async def add_to_cart(callback: types.CallbackQuery):
-    if not state["is_open"]:
-        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
-        return
     item_id = callback.data.split("|")[1]
     item = ALL_ITEMS.get(item_id)
     uid = callback.from_user.id
@@ -905,10 +883,25 @@ async def add_to_cart(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "view_cart")
 async def view_cart(callback: types.CallbackQuery):
     uid = callback.from_user.id
+    await show_cart(uid, callback.message)
+
+
+async def show_cart(uid, message=None, chat_id=None):
     items = cart.get(uid, [])
 
     if not items:
-        await callback.answer("🛒 Кошик порожній!", show_alert=True)
+        if message:
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        target = chat_id or (message.chat.id if message else uid)
+        await bot.send_message(
+            chat_id=target,
+            text="🛒 *Кошик порожній*\n\nОберіть страви з меню!",
+            reply_markup=size_question_keyboard(uid=uid),
+            parse_mode="Markdown"
+        )
         return
 
     text = "🛒 *Ваш кошик:*\n\n"
@@ -918,21 +911,43 @@ async def view_cart(callback: types.CallbackQuery):
     text += f"\n💰 *Разом: {total} ₴*"
 
     builder = InlineKeyboardBuilder()
+    # Кнопки видалення для кожної позиції
+    for i in range(len(items)):
+        builder.button(
+            text=f"❌ Видалити: {items[i]['item'][:20]}",
+            callback_data=f"delcart|{i}"
+        )
     builder.button(text="✅ Замовити все",      callback_data="checkout_cart")
     builder.button(text="🗑 Очистити кошик",   callback_data="clear_cart")
     builder.button(text="🏠 Головне меню",     callback_data="back_main")
     builder.adjust(1)
 
     try:
-        await callback.message.delete()
+        if message:
+            await message.delete()
     except Exception:
         pass
+    target = chat_id or (message.chat.id if message else uid)
     await bot.send_message(
-        chat_id=uid,
+        chat_id=target,
         text=text,
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
+
+
+@dp.callback_query(F.data.startswith("delcart|"))
+async def delete_from_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    index = int(callback.data.split("|")[1])
+    items = cart.get(uid, [])
+
+    if index < len(items):
+        removed = items.pop(index)
+        cart[uid] = items
+        await callback.answer(f"❌ {removed['item']} видалено!", show_alert=False)
+
+    await show_cart(uid, callback.message)
 
 
 @dp.callback_query(F.data == "clear_cart")
