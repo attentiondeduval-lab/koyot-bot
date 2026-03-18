@@ -143,6 +143,7 @@ def size_question_keyboard():
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
     builder.button(text="📍 Ми на карті", url="http://bit.ly/4lB6sM9")
+    builder.button(text="💬 Підтримка / Питання", url="https://t.me/koyot_cv")
     builder.adjust(1)
     return builder.as_markup()
 
