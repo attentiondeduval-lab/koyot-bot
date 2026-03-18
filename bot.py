@@ -111,6 +111,19 @@ for items in MENU.values():
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+async def send_closed_message(chat_id):
+    builder = InlineKeyboardBuilder()
+    builder.adjust(1)
+    await bot.send_message(
+        chat_id=chat_id,
+        text="🔴 *Замовлення зараз недоступні.*\n\n"
+             "Заклад тимчасово закритий.\n\n"
+             "📞 *Для зв'язку:* 099 054 45 35\n"
+             "💬 *Написати нам:* @koyot_cv",
+        parse_mode="Markdown"
+    )
+
+
 
 
 def get_status():
@@ -177,7 +190,7 @@ async def start(message: types.Message):
         f"Пн–Пт: 10:00 – 21:00\n\n"
         f"📞 *Телефон:* 099 054 45 35\n\n"
         f"━━━━━━━━━━━━━━━━\n"
-        f"🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+        f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?",
         reply_markup=size_question_keyboard(),
         parse_mode="Markdown"
     )
@@ -190,9 +203,12 @@ async def back_main(callback: types.CallbackQuery):
         await callback.message.delete()
     except Exception:
         pass
+    if not is_open:
+        await send_closed_message(callback.message.chat.id)
+        return
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🤔 Яку порцію бажаєш обрати —\n*великий* чи *середній* розмір?",
+        text="🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?",
         reply_markup=size_question_keyboard(),
         parse_mode="Markdown"
     )
@@ -210,7 +226,7 @@ async def menu_big(callback: types.CallbackQuery):
     builder.button(text="🏠 Головне меню",        callback_data="back_main")
     builder.adjust(2, 1)
     await callback.message.edit_text(
-        "🔴 *БІГ МЕНЮ* — великий розмір\n\nОбери тип:",
+        "🔴 *БІГ МЕНЮ* — великий розмір\n\nОберіть тип:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -231,7 +247,7 @@ async def big_lavash(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+        text="🔴 БІГ МЕНЮ · 🌯 *В лаваші*\n\nОберіть страву:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -252,7 +268,7 @@ async def big_bulka(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+        text="🔴 БІГ МЕНЮ · 🍞 *В булці*\n\nОберіть страву:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -270,7 +286,7 @@ async def menu_mid(callback: types.CallbackQuery):
     builder.button(text="🏠 Головне меню",      callback_data="back_main")
     builder.adjust(2, 1)
     await callback.message.edit_text(
-        "🟡 *СЕРЕДНЄ МЕНЮ* — середній розмір\n\nОбери тип:",
+        "🟡 *СЕРЕДНЄ МЕНЮ* — середній розмір\n\nОберіть тип:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -291,7 +307,7 @@ async def mid_lavash(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОбери страву:",
+        text="🟡 СЕРЕДНЄ МЕНЮ · 🌯 *В лаваші*\n\nОберіть страву:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -312,7 +328,7 @@ async def mid_bulka(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОбери страву:",
+        text="🟡 СЕРЕДНЄ МЕНЮ · 🍞 *В булці*\n\nОберіть страву:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -443,7 +459,7 @@ async def order_item(callback: types.CallbackQuery):
     await callback.message.answer(
         f"✅ Чудовий вибір!\n\n"
         f"🍽 *{item['name']}* — {item['price']} ₴\n\n"
-        f"📝 *Крок 1 з 2 — Введи своє ім'я:*",
+        f"📝 *Крок 1 з 2 — Введіть своє ім'я:*",
         reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -469,7 +485,7 @@ async def recommend(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🎯 Допоможу вибрати!\n\nЯк ти зараз себе почуваєш?",
+        text="🎯 Допоможу вибрати!\n\nЯк ви зараз себе почуваєтесь?",
         reply_markup=builder.as_markup()
     )
 
@@ -498,7 +514,7 @@ async def r_medium(callback: types.CallbackQuery):
     builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await callback.message.edit_text(
-        "Середній апетит — є відмінні варіанти! 😋\n\nОбери що цікавить:",
+        "Середній апетит — є відмінні варіанти! 😋\n\nОберіть що цікавить:",
         reply_markup=builder.as_markup()
     )
 
@@ -513,7 +529,7 @@ async def r_light(callback: types.CallbackQuery):
     builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await callback.message.edit_text(
-        "Хочеш щось легке — середнє меню ідеально! 🥗\n\nОбери варіант:",
+        "Хочеш щось легке — середнє меню ідеально! 🥗\n\nОберіть варіант:",
         reply_markup=builder.as_markup()
     )
 
@@ -578,7 +594,7 @@ async def spin_wheel(callback: types.CallbackQuery):
     # Перевіряємо чи вже крутив сьогодні
     if has_spun_today(user_id):
         await callback.answer(
-            "😅 Ти вже крутив колесо сьогодні! Повертайся завтра 🌙",
+            "😅 Ви вже крутили колесо сьогодні! Повертайтесь завтра 🌙",
             show_alert=True
         )
         return
@@ -598,7 +614,7 @@ async def spin_wheel(callback: types.CallbackQuery):
         s1 = symbols[i % len(symbols)]
         s2 = symbols[(i + 2) % len(symbols)]
         s3 = symbols[(i + 4) % len(symbols)]
-        frame = "🎰 *Рулетка крутиться...*\n\n┌───────────┐\n│ " + s1 + " │ " + s2 + " │ " + s3 + " │\n└───────────┘\n\n⏳ Зачекай..."
+        frame = "🎰 *Рулетка крутиться...*\n\n┌───────────┐\n│ " + s1 + " │ " + s2 + " │ " + s3 + " │\n└───────────┘\n\n⏳ Зачекайте..."
         await msg.edit_text(frame, parse_mode="Markdown")
         await asyncio.sleep(0.15 + i * 0.04)
 
@@ -628,9 +644,9 @@ async def spin_wheel(callback: types.CallbackQuery):
         "┌─────────────┐\n"
         f"│  {e}  │  {e}  │  {e}  │\n"
         "└─────────────┘\n\n"
-        "🏆 *Ти виграв:*\n"
+        "🏆 *Ви виграли:*\n"
         f"{prize['text']}\n\n"
-        "📍 _Покажи цей екран на касі!_"
+        "📍 _Покажіть цей екран на касі!_"
     )
     await msg.edit_text(
         result_text,
@@ -680,7 +696,7 @@ async def handle_review(callback: types.CallbackQuery):
     await callback.message.edit_text(
         f"{star_display}\n\n"
         f"Дякуємо за оцінку! 🙏\n\n"
-        f"✍️ Хочеш залишити коментар? Напиши що думаєш про нас!\n"
+        f"✍️ Хочеш залишити коментар? Напишіть що думаєш про нас!\n"
         f"(або натисни Пропустити)",
         reply_markup=builder.as_markup()
     )
@@ -762,7 +778,7 @@ async def add_to_cart(callback: types.CallbackQuery):
         chat_id=uid,
         text=f"✅ *{item['name']}* додано в кошик!\n\n"
              f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
-             f"Продовжуй вибирати або переглянь кошик:",
+             f"Продовжуйте вибирати або переглянь кошик:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -777,7 +793,7 @@ async def view_cart(callback: types.CallbackQuery):
         await callback.answer("🛒 Кошик порожній!", show_alert=True)
         return
 
-    text = "🛒 *Твій кошик:*\n\n"
+    text = "🛒 *Ваш кошик:*\n\n"
     for i, item in enumerate(items, 1):
         text += f"{i}. {item['item']} — {item['price']} ₴\n"
     total = sum(i["price"] for i in items)
@@ -819,6 +835,9 @@ async def clear_cart(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "checkout_cart")
 async def checkout_cart(callback: types.CallbackQuery):
     uid = callback.from_user.id
+    if not is_open:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
     items = cart.get(uid, [])
 
     if not items:
@@ -842,7 +861,7 @@ async def checkout_cart(callback: types.CallbackQuery):
     await bot.send_message(
         chat_id=uid,
         text=f"🛒 *Замовлення:*\n{items_text}\n💰 {total} ₴\n\n"
-             f"✍️ Введи своє *ім'я* для підтвердження:",
+             f"✍️ Введіть своє *ім'я* для підтвердження:",
         reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -934,7 +953,7 @@ async def confirm_order(message: types.Message):
     # Повідомляємо клієнта
     await bot.send_message(
         chat_id=order["user_id"],
-        text=f"🎉 *Твоє замовлення прийнято!*\n\n"
+        text=f"🎉 *Ваше замовлення прийнято!*\n\n"
              f"🍽 *{order['item']}* — {order['price']} ₴\n"
              f"📝 {order['details']}\n\n"
              f"⏰ Очікуй — ми вже готуємо!\n"
@@ -984,7 +1003,7 @@ async def add_to_cart(callback: types.CallbackQuery):
         chat_id=uid,
         text=f"✅ *{item['name']}* додано в кошик!\n\n"
              f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
-             f"Продовжуй вибирати або переглянь кошик:",
+             f"Продовжуйте вибирати або переглянь кошик:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -999,7 +1018,7 @@ async def view_cart(callback: types.CallbackQuery):
         await callback.answer("🛒 Кошик порожній!", show_alert=True)
         return
 
-    text = "🛒 *Твій кошик:*\n\n"
+    text = "🛒 *Ваш кошик:*\n\n"
     for i, item in enumerate(items, 1):
         text += f"{i}. {item['item']} — {item['price']} ₴\n"
     total = sum(i["price"] for i in items)
@@ -1041,6 +1060,9 @@ async def clear_cart(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "checkout_cart")
 async def checkout_cart(callback: types.CallbackQuery):
     uid = callback.from_user.id
+    if not is_open:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
     items = cart.get(uid, [])
 
     if not items:
@@ -1064,7 +1086,7 @@ async def checkout_cart(callback: types.CallbackQuery):
     await bot.send_message(
         chat_id=uid,
         text=f"🛒 *Замовлення:*\n{items_text}\n💰 {total} ₴\n\n"
-             f"✍️ Введи своє *ім'я* для підтвердження:",
+             f"✍️ Введіть своє *ім'я* для підтвердження:",
         reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -1107,6 +1129,10 @@ waiting_phone = {}
 @dp.message(lambda m: m.from_user.id in waiting_name and m.from_user.id not in user_stars)
 async def receive_name(message: types.Message):
     uid = message.from_user.id
+    if not is_open:
+        waiting_name.pop(uid, None)
+        await send_closed_message(uid)
+        return
     order_data = waiting_name.pop(uid, {})
     item_name = order_data.get("item", "—")
     item_price = order_data.get("price", "—")
@@ -1126,7 +1152,7 @@ async def receive_name(message: types.Message):
     await message.answer(
         f"✅ Ім'я: *{client_name}*\n\n"
         f"✍️ *Крок 1.5 — Побажання* _(необов'язково)_\n"
-        f"Напиши побажання до замовлення:\n"
+        f"Напишіть побажання до замовлення:\n"
         f"_(без соусу, без помідорів...)_\n\n"
         f"Або натисни *Без побажань*",
         reply_markup=skip_builder.as_markup(),
@@ -1155,7 +1181,7 @@ async def finalize_order(uid, notes="—"):
     await bot.send_message(
         chat_id=uid,
         text=f"📞 *Крок 2 з 2 — Номер телефону*\n\n"
-             f"Вкажи свій номер телефону — це обов'язково щоб ми могли підтвердити замовлення:\n\n"
+             f"Вкажіть свій номер телефону — це обов'язково щоб ми могли підтвердити замовлення:\n\n"
              f"_(наприклад: 0991234567)_",
         reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
@@ -1228,7 +1254,7 @@ async def receive_phone(message: types.Message):
     if not digits_only.isdigit():
         await message.answer(
             "❗️ Номер має містити тільки цифри.\n"
-            "Спробуй ще раз у форматі: _066 503 94 33_",
+            "Спробуйте ще раз у форматі: _066 503 94 33_",
             parse_mode="Markdown"
         )
         return
@@ -1236,7 +1262,7 @@ async def receive_phone(message: types.Message):
     if len(digits_only) < 10:
         await message.answer(
             "❗️ Номер занадто короткий — має бути мінімум *10 цифр*.\n"
-            "Спробуй ще раз у форматі: _066 503 94 33_",
+            "Спробуйте ще раз у форматі: _066 503 94 33_",
             parse_mode="Markdown"
         )
         return
@@ -1244,7 +1270,7 @@ async def receive_phone(message: types.Message):
     if not digits_only.startswith("0"):
         await message.answer(
             "❗️ Номер має починатись з *0*.\n"
-            "Спробуй ще раз у форматі: _066 503 94 33_",
+            "Спробуйте ще раз у форматі: _066 503 94 33_",
             parse_mode="Markdown"
         )
         return
@@ -1413,7 +1439,7 @@ async def disable_item(message: types.Message):
 
     item_id = parts[1].strip()
     if item_id not in ALL_ITEMS:
-        await message.answer(f"❗️ Позицію *{item_id}* не знайдено.\n\nНапиши /off щоб побачити список", parse_mode="Markdown")
+        await message.answer(f"❗️ Позицію *{item_id}* не знайдено.\n\nНапишіть /off щоб побачити список", parse_mode="Markdown")
         return
 
     disabled_items.add(item_id)
