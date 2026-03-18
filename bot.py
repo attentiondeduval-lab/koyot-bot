@@ -372,9 +372,10 @@ async def show_dish(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     if state["is_open"]:
         builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
+        builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
     else:
-        builder.button(text="⚠️ Зараз закрито — замовлення недоступні", callback_data="closed_info")
-    builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
+        builder.button(text="🛒 Додати в кошик (замовлення після відкриття)", callback_data=f"addcart|{item_id}")
+        builder.button(text="⚠️ Зараз закрито",     callback_data="closed_info")
     builder.button(text=cart_label,              callback_data="view_cart")
     builder.button(text="🔙 Назад",              callback_data=back_cat)
     builder.button(text="🏠 Головне меню",       callback_data="back_main")
@@ -573,6 +574,21 @@ pending_orders = {}
 # Хто зараз вводить замовлення
 waiting_order = {}
 
+# Очікуємо побажання
+waiting_notes = {}
+
+# Очікуємо номер телефону
+waiting_phone = {}
+
+# Кошик клієнта {user_id: [{"item": ..., "price": ...}, ...]}
+cart = {}
+
+# Вимкнені позиції адміном
+disabled_items = set()
+
+# Чи відкритий заклад для замовлень
+state = {"is_open": True}
+
 @dp.callback_query(F.data == "spin")
 async def spin_wheel(callback: types.CallbackQuery):
     user_id = callback.from_user.id
@@ -737,7 +753,6 @@ async def handle_review_text(message: types.Message):
 #  КОШИК
 # ============================================
 
-@dp.callback_query(F.data.startswith("addcart|"))
 # ============================================
 #  СИСТЕМА ЗАМОВЛЕНЬ
 # ============================================
@@ -1019,20 +1034,6 @@ async def cancel_name(callback: types.CallbackQuery):
     )
 
 
-# Очікуємо побажання {user_id: {"item": ..., "price": ..., "name": ...}}
-waiting_notes = {}
-
-# Кошик клієнта {user_id: [{"item": ..., "price": ...}, ...]}
-cart = {}
-
-# Вимкнені позиції адміном {item_id: True}
-disabled_items = set()
-
-# Чи відкритий заклад для замовлень
-state = {"is_open": True}
-
-# Очікуємо номер телефону {user_id: order_data}
-waiting_phone = {}
 
 @dp.message(lambda m: m.from_user.id in waiting_name and m.from_user.id not in user_stars)
 async def receive_name(message: types.Message):
