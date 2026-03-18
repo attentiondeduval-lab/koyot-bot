@@ -371,10 +371,15 @@ async def show_dish(callback: types.CallbackQuery):
     cart_label = f"🛒 Кошик ({cart_count})" if cart_count > 0 else "🛒 Кошик"
     builder = InlineKeyboardBuilder()
     if state["is_open"]:
-        builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
-        builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
+        builder.button(text="✅ Замовити 1 шт",      callback_data=f"order|{item_id}")
+        # Кнопки кількості для кошика
+        builder.button(text="🛒 +1",  callback_data=f"addcart|{item_id}|1")
+        builder.button(text="🛒 +2",  callback_data=f"addcart|{item_id}|2")
+        builder.button(text="🛒 +3",  callback_data=f"addcart|{item_id}|3")
+        builder.button(text="🛒 +5",  callback_data=f"addcart|{item_id}|5")
     else:
-        builder.button(text="🛒 Додати в кошик (замовлення після відкриття)", callback_data=f"addcart|{item_id}")
+        builder.button(text="🛒 +1",  callback_data=f"addcart|{item_id}|1")
+        builder.button(text="🛒 +2",  callback_data=f"addcart|{item_id}|2")
         builder.button(text="⚠️ Зараз закрито",     callback_data="closed_info")
     builder.button(text=cart_label,              callback_data="view_cart")
     builder.button(text="🔙 Назад",              callback_data=back_cat)
@@ -865,20 +870,32 @@ async def confirm_order(message: types.Message):
 
 @dp.callback_query(F.data.startswith("addcart|"))
 async def add_to_cart(callback: types.CallbackQuery):
-    item_id = callback.data.split("|")[1]
+    parts = callback.data.split("|")
+    item_id = parts[1]
+    qty = int(parts[2]) if len(parts) > 2 else 1
     item = ALL_ITEMS.get(item_id)
     uid = callback.from_user.id
 
     if uid not in cart:
         cart[uid] = []
-    cart[uid].append({"item": item["name"], "price": item["price"]})
+
+    # Перевіряємо чи є вже така позиція в кошику
+    found = False
+    for c in cart[uid]:
+        if c["name"] == item["name"]:
+            c["qty"] += qty
+            c["price"] = item["price"] * c["qty"]
+            found = True
+            break
+    if not found:
+        cart[uid].append({"name": item["name"], "price": item["price"] * qty, "unit_price": item["price"], "qty": qty})
 
     total = sum(i["price"] for i in cart[uid])
-    count = len(cart[uid])
+    total_qty = sum(i["qty"] for i in cart[uid])
 
     builder = InlineKeyboardBuilder()
-    builder.button(text=f"🛒 Переглянути кошик ({count} поз.)", callback_data="view_cart")
-    builder.button(text="🔙 Назад",        callback_data=f"back_main")
+    builder.button(text=f"🛒 Переглянути кошик ({total_qty} шт. · {total} ₴)", callback_data="view_cart")
+    builder.button(text="🔙 Назад", callback_data="back_main")
     builder.adjust(1)
 
     try:
@@ -887,9 +904,9 @@ async def add_to_cart(callback: types.CallbackQuery):
         pass
     await bot.send_message(
         chat_id=uid,
-        text=f"✅ *{item['name']}* додано в кошик!\n\n"
-             f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
-             f"Продовжуйте вибирати або переглянь кошик:",
+        text=f"✅ *{item['name']}* x{qty} додано в кошик!\n\n"
+             f"🛒 В кошику: *{total_qty} шт.* на суму *{total} ₴*\n\n"
+             f"Продовжуйте вибирати або переглянте кошик:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -921,15 +938,19 @@ async def show_cart(uid, message=None, chat_id=None):
 
     text = "🛒 *Ваш кошик:*\n\n"
     for i, item in enumerate(items, 1):
-        text += f"{i}. {item['item']} — {item['price']} ₴\n"
+        qty = item.get("qty", 1)
+        unit = item.get("unit_price", item["price"])
+        name = item.get("name", item.get("item", "—"))
+        text += f"{i}. {name} x{qty} — {item['price']} ₴\n"
     total = sum(i["price"] for i in items)
     text += f"\n💰 *Разом: {total} ₴*"
 
     builder = InlineKeyboardBuilder()
     # Кнопки видалення для кожної позиції
     for i in range(len(items)):
+        name = items[i].get("name", items[i].get("item", "—"))
         builder.button(
-            text=f"❌ Видалити: {items[i]['item'][:20]}",
+            text=f"❌ Видалити: {name[:20]}",
             callback_data=f"delcart|{i}"
         )
     builder.button(text="✅ Замовити все",      callback_data="checkout_cart")
@@ -960,7 +981,8 @@ async def delete_from_cart(callback: types.CallbackQuery):
     if index < len(items):
         removed = items.pop(index)
         cart[uid] = items
-        await callback.answer(f"❌ {removed['item']} видалено!", show_alert=False)
+        rname = removed.get("name", removed.get("item", "Позиція"))
+        await callback.answer(f"❌ {rname} видалено!", show_alert=False)
 
     await show_cart(uid, callback.message)
 
@@ -994,7 +1016,7 @@ async def checkout_cart(callback: types.CallbackQuery):
 
     # Зберігаємо замовлення з кошика для введення імені
     total = sum(i["price"] for i in items)
-    items_text = ", ".join([i["item"] for i in items])
+    items_text = ", ".join([f"{i.get('name', i.get('item','—'))} x{i.get('qty',1)}" for i in items])
     waiting_name[uid] = {"item": items_text, "price": total}
     cart.pop(uid, None)
 
