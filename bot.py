@@ -172,7 +172,7 @@ def main_menu_keyboard():
 # --- СТАРТ ---
 @dp.message(CommandStart())
 async def start(message: types.Message):
-    if not is_open:
+    if not state["is_open"]:
         await message.answer(
             "🔴 *Нажаль, зараз ми не приймаємо замовлення.*\n\n"
             "Заклад тимчасово закритий.\n\n"
@@ -203,7 +203,7 @@ async def back_main(callback: types.CallbackQuery):
         await callback.message.delete()
     except Exception:
         pass
-    if not is_open:
+    if not state["is_open"]:
         await send_closed_message(callback.message.chat.id)
         return
     await bot.send_message(
@@ -220,6 +220,9 @@ async def back_main(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "menu_big")
 async def menu_big(callback: types.CallbackQuery):
+    if not state["is_open"]:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",     callback_data="big_lavash")
     builder.button(text="🍞 В булці",      callback_data="big_bulka")
@@ -280,6 +283,9 @@ async def big_bulka(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "menu_mid")
 async def menu_mid(callback: types.CallbackQuery):
+    if not state["is_open"]:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",   callback_data="mid_lavash")
     builder.button(text="🍞 В булці",    callback_data="mid_bulka")
@@ -370,7 +376,7 @@ async def show_dish(callback: types.CallbackQuery):
         return
 
     # Перевіряємо чи заклад відкритий
-    if not is_open:
+    if not state["is_open"]:
         builder_closed = InlineKeyboardBuilder()
         builder_closed.button(text="🏠 Головне меню", callback_data="back_main")
         builder_closed.adjust(1)
@@ -429,7 +435,7 @@ async def order_item(callback: types.CallbackQuery):
     item_id = callback.data.split("|")[1]
     item = ALL_ITEMS.get(item_id)
 
-    if not is_open:
+    if not state["is_open"]:
         await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
         return
 
@@ -753,120 +759,6 @@ async def handle_review_text(message: types.Message):
 # ============================================
 
 @dp.callback_query(F.data.startswith("addcart|"))
-async def add_to_cart(callback: types.CallbackQuery):
-    item_id = callback.data.split("|")[1]
-    item = ALL_ITEMS.get(item_id)
-    uid = callback.from_user.id
-
-    if uid not in cart:
-        cart[uid] = []
-    cart[uid].append({"item": item["name"], "price": item["price"]})
-
-    total = sum(i["price"] for i in cart[uid])
-    count = len(cart[uid])
-
-    builder = InlineKeyboardBuilder()
-    builder.button(text=f"🛒 Переглянути кошик ({count} поз.)", callback_data="view_cart")
-    builder.button(text="🔙 Назад",        callback_data=f"back_main")
-    builder.adjust(1)
-
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await bot.send_message(
-        chat_id=uid,
-        text=f"✅ *{item['name']}* додано в кошик!\n\n"
-             f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
-             f"Продовжуйте вибирати або переглянь кошик:",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
-
-
-@dp.callback_query(F.data == "view_cart")
-async def view_cart(callback: types.CallbackQuery):
-    uid = callback.from_user.id
-    items = cart.get(uid, [])
-
-    if not items:
-        await callback.answer("🛒 Кошик порожній!", show_alert=True)
-        return
-
-    text = "🛒 *Ваш кошик:*\n\n"
-    for i, item in enumerate(items, 1):
-        text += f"{i}. {item['item']} — {item['price']} ₴\n"
-    total = sum(i["price"] for i in items)
-    text += f"\n💰 *Разом: {total} ₴*"
-
-    builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Замовити все",      callback_data="checkout_cart")
-    builder.button(text="🗑 Очистити кошик",   callback_data="clear_cart")
-    builder.button(text="🏠 Головне меню",     callback_data="back_main")
-    builder.adjust(1)
-
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await bot.send_message(
-        chat_id=uid,
-        text=text,
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
-
-
-@dp.callback_query(F.data == "clear_cart")
-async def clear_cart(callback: types.CallbackQuery):
-    uid = callback.from_user.id
-    cart.pop(uid, None)
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await bot.send_message(
-        chat_id=uid,
-        text="🗑 Кошик очищено!",
-        reply_markup=size_question_keyboard()
-    )
-
-
-@dp.callback_query(F.data == "checkout_cart")
-async def checkout_cart(callback: types.CallbackQuery):
-    uid = callback.from_user.id
-    if not is_open:
-        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
-        return
-    items = cart.get(uid, [])
-
-    if not items:
-        await callback.answer("🛒 Кошик порожній!", show_alert=True)
-        return
-
-    # Зберігаємо замовлення з кошика для введення імені
-    total = sum(i["price"] for i in items)
-    items_text = ", ".join([i["item"] for i in items])
-    waiting_name[uid] = {"item": items_text, "price": total}
-    cart.pop(uid, None)
-
-    cancel_builder = InlineKeyboardBuilder()
-    cancel_builder.button(text="❌ Скасувати", callback_data="cancel_name")
-    cancel_builder.adjust(1)
-
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await bot.send_message(
-        chat_id=uid,
-        text=f"🛒 *Замовлення:*\n{items_text}\n💰 {total} ₴\n\n"
-             f"✍️ Введіть своє *ім'я* для підтвердження:",
-        reply_markup=cancel_builder.as_markup(),
-        parse_mode="Markdown"
-    )
-
-
 # ============================================
 #  СИСТЕМА ЗАМОВЛЕНЬ
 # ============================================
@@ -979,6 +871,9 @@ async def confirm_order(message: types.Message):
 
 @dp.callback_query(F.data.startswith("addcart|"))
 async def add_to_cart(callback: types.CallbackQuery):
+    if not state["is_open"]:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
     item_id = callback.data.split("|")[1]
     item = ALL_ITEMS.get(item_id)
     uid = callback.from_user.id
@@ -1060,7 +955,7 @@ async def clear_cart(callback: types.CallbackQuery):
 @dp.callback_query(F.data == "checkout_cart")
 async def checkout_cart(callback: types.CallbackQuery):
     uid = callback.from_user.id
-    if not is_open:
+    if not state["is_open"]:
         await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
         return
     items = cart.get(uid, [])
@@ -1121,7 +1016,7 @@ cart = {}
 disabled_items = set()
 
 # Чи відкритий заклад для замовлень
-is_open = True
+state = {"is_open": True}
 
 # Очікуємо номер телефону {user_id: order_data}
 waiting_phone = {}
@@ -1129,7 +1024,7 @@ waiting_phone = {}
 @dp.message(lambda m: m.from_user.id in waiting_name and m.from_user.id not in user_stars)
 async def receive_name(message: types.Message):
     uid = message.from_user.id
-    if not is_open:
+    if not state["is_open"]:
         waiting_name.pop(uid, None)
         await send_closed_message(uid)
         return
@@ -1246,6 +1141,10 @@ async def send_order(uid, phone="—"):
 @dp.message(lambda m: m.from_user.id in waiting_phone and m.from_user.id not in user_stars and m.from_user.id not in waiting_name and m.from_user.id not in waiting_notes)
 async def receive_phone(message: types.Message):
     uid = message.from_user.id
+    if not state["is_open"]:
+        waiting_phone.pop(uid, None)
+        await send_closed_message(uid)
+        return
     phone = message.text.strip()
 
     # Валідація номера — тільки цифри і пробіли
@@ -1291,6 +1190,10 @@ async def skip_notes(callback: types.CallbackQuery):
 @dp.message(lambda m: m.from_user.id in waiting_notes and m.from_user.id not in user_stars)
 async def receive_notes(message: types.Message):
     uid = message.from_user.id
+    if not state["is_open"]:
+        waiting_notes.pop(uid, None)
+        await send_closed_message(uid)
+        return
     notes = message.text.strip()
     await finalize_order(uid, notes=notes)
 
@@ -1382,8 +1285,7 @@ async def show_clients(message: types.Message):
 
 @dp.message(lambda m: m.text == "/open" and m.from_user.id == ADMIN_ID)
 async def open_orders(message: types.Message):
-    global is_open
-    is_open = True
+    state["is_open"] = True
     await message.answer(
         "🟢 *Замовлення ВІДКРИТО!*\n\n"
         "Клієнти можуть робити замовлення через бота.",
@@ -1393,8 +1295,7 @@ async def open_orders(message: types.Message):
 
 @dp.message(lambda m: m.text == "/close" and m.from_user.id == ADMIN_ID)
 async def close_orders(message: types.Message):
-    global is_open
-    is_open = False
+    state["is_open"] = False
     await message.answer(
         "🔴 *Замовлення ЗАКРИТО!*\n\n"
         "Клієнти не зможуть робити замовлення через бота.",
@@ -1404,7 +1305,7 @@ async def close_orders(message: types.Message):
 
 @dp.message(lambda m: m.text == "/status" and m.from_user.id == ADMIN_ID)
 async def check_status(message: types.Message):
-    status = "🟢 ВІДКРИТО" if is_open else "🔴 ЗАКРИТО"
+    status = "🟢 ВІДКРИТО" if state["is_open"] else "🔴 ЗАКРИТО"
     disabled_count = len(disabled_items)
     await message.answer(
         f"📊 *Статус закладу:* {status}\n"
