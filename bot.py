@@ -324,9 +324,10 @@ async def show_dish(callback: types.CallbackQuery):
         return
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Хочу замовити!", callback_data=f"order|{item_id}")
-    builder.button(text="🔙 Назад",          callback_data=back_cat)
-    builder.button(text="🏠 Головне меню", callback_data="back_main")
+    builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
+    builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
+    builder.button(text="🔙 Назад",              callback_data=back_cat)
+    builder.button(text="🏠 Головне меню",       callback_data="back_main")
     builder.adjust(1)
 
     caption = (
@@ -692,6 +693,122 @@ async def handle_review_text(message: types.Message):
 
 
 # ============================================
+#  КОШИК
+# ============================================
+
+@dp.callback_query(F.data.startswith("addcart|"))
+async def add_to_cart(callback: types.CallbackQuery):
+    item_id = callback.data.split("|")[1]
+    item = ALL_ITEMS.get(item_id)
+    uid = callback.from_user.id
+
+    if uid not in cart:
+        cart[uid] = []
+    cart[uid].append({"item": item["name"], "price": item["price"]})
+
+    total = sum(i["price"] for i in cart[uid])
+    count = len(cart[uid])
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"🛒 Переглянути кошик ({count} поз.)", callback_data="view_cart")
+    builder.button(text="🔙 Назад",        callback_data=f"back_main")
+    builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=f"✅ *{item['name']}* додано в кошик!\n\n"
+             f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
+             f"Продовжуй вибирати або переглянь кошик:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+@dp.callback_query(F.data == "view_cart")
+async def view_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    items = cart.get(uid, [])
+
+    if not items:
+        await callback.answer("🛒 Кошик порожній!", show_alert=True)
+        return
+
+    text = "🛒 *Твій кошик:*\n\n"
+    for i, item in enumerate(items, 1):
+        text += f"{i}. {item['item']} — {item['price']} ₴\n"
+    total = sum(i["price"] for i in items)
+    text += f"\n💰 *Разом: {total} ₴*"
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Замовити все",      callback_data="checkout_cart")
+    builder.button(text="🗑 Очистити кошик",   callback_data="clear_cart")
+    builder.button(text="🏠 Головне меню",     callback_data="back_main")
+    builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=text,
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+@dp.callback_query(F.data == "clear_cart")
+async def clear_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    cart.pop(uid, None)
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text="🗑 Кошик очищено!",
+        reply_markup=size_question_keyboard()
+    )
+
+
+@dp.callback_query(F.data == "checkout_cart")
+async def checkout_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    items = cart.get(uid, [])
+
+    if not items:
+        await callback.answer("🛒 Кошик порожній!", show_alert=True)
+        return
+
+    # Зберігаємо замовлення з кошика для введення імені
+    total = sum(i["price"] for i in items)
+    items_text = ", ".join([i["item"] for i in items])
+    waiting_name[uid] = {"item": items_text, "price": total}
+    cart.pop(uid, None)
+
+    cancel_builder = InlineKeyboardBuilder()
+    cancel_builder.button(text="❌ Скасувати", callback_data="cancel_name")
+    cancel_builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=f"🛒 *Замовлення:*\n{items_text}\n💰 {total} ₴\n\n"
+             f"✍️ Введи своє *ім'я* для підтвердження:",
+        reply_markup=cancel_builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+# ============================================
 #  СИСТЕМА ЗАМОВЛЕНЬ
 # ============================================
 
@@ -798,6 +915,122 @@ async def confirm_order(message: types.Message):
 
 
 # ============================================
+#  КОШИК
+# ============================================
+
+@dp.callback_query(F.data.startswith("addcart|"))
+async def add_to_cart(callback: types.CallbackQuery):
+    item_id = callback.data.split("|")[1]
+    item = ALL_ITEMS.get(item_id)
+    uid = callback.from_user.id
+
+    if uid not in cart:
+        cart[uid] = []
+    cart[uid].append({"item": item["name"], "price": item["price"]})
+
+    total = sum(i["price"] for i in cart[uid])
+    count = len(cart[uid])
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"🛒 Переглянути кошик ({count} поз.)", callback_data="view_cart")
+    builder.button(text="🔙 Назад",        callback_data=f"back_main")
+    builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=f"✅ *{item['name']}* додано в кошик!\n\n"
+             f"🛒 В кошику: *{count} поз.* на суму *{total} ₴*\n\n"
+             f"Продовжуй вибирати або переглянь кошик:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+@dp.callback_query(F.data == "view_cart")
+async def view_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    items = cart.get(uid, [])
+
+    if not items:
+        await callback.answer("🛒 Кошик порожній!", show_alert=True)
+        return
+
+    text = "🛒 *Твій кошик:*\n\n"
+    for i, item in enumerate(items, 1):
+        text += f"{i}. {item['item']} — {item['price']} ₴\n"
+    total = sum(i["price"] for i in items)
+    text += f"\n💰 *Разом: {total} ₴*"
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Замовити все",      callback_data="checkout_cart")
+    builder.button(text="🗑 Очистити кошик",   callback_data="clear_cart")
+    builder.button(text="🏠 Головне меню",     callback_data="back_main")
+    builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=text,
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+@dp.callback_query(F.data == "clear_cart")
+async def clear_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    cart.pop(uid, None)
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text="🗑 Кошик очищено!",
+        reply_markup=size_question_keyboard()
+    )
+
+
+@dp.callback_query(F.data == "checkout_cart")
+async def checkout_cart(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    items = cart.get(uid, [])
+
+    if not items:
+        await callback.answer("🛒 Кошик порожній!", show_alert=True)
+        return
+
+    # Зберігаємо замовлення з кошика для введення імені
+    total = sum(i["price"] for i in items)
+    items_text = ", ".join([i["item"] for i in items])
+    waiting_name[uid] = {"item": items_text, "price": total}
+    cart.pop(uid, None)
+
+    cancel_builder = InlineKeyboardBuilder()
+    cancel_builder.button(text="❌ Скасувати", callback_data="cancel_name")
+    cancel_builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=uid,
+        text=f"🛒 *Замовлення:*\n{items_text}\n💰 {total} ₴\n\n"
+             f"✍️ Введи своє *ім'я* для підтвердження:",
+        reply_markup=cancel_builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+# ============================================
 #  СИСТЕМА ЗАМОВЛЕНЬ
 # ============================================
 
@@ -818,6 +1051,9 @@ async def cancel_name(callback: types.CallbackQuery):
 
 # Очікуємо побажання {user_id: {"item": ..., "price": ..., "name": ...}}
 waiting_notes = {}
+
+# Кошик клієнта {user_id: [{"item": ..., "price": ...}, ...]}
+cart = {}
 
 @dp.message(lambda m: m.from_user.id in waiting_name and m.from_user.id not in user_stars)
 async def receive_name(message: types.Message):
