@@ -159,6 +159,17 @@ def main_menu_keyboard():
 # --- СТАРТ ---
 @dp.message(CommandStart())
 async def start(message: types.Message):
+    if not is_open:
+        await message.answer(
+            "🔴 *Нажаль, зараз ми не приймаємо замовлення.*\n\n"
+            "Заклад тимчасово закритий.\n\n"
+            "📞 *Для зв'язку:* 099 054 45 35\n"
+            "💬 *Написати нам:* @koyot_cv\n\n"
+            "Завітайте до нас пізніше! 🐺",
+            parse_mode="Markdown"
+        )
+        return
+
     await message.answer(
         f"👋 Привіт! Ласкаво просимо до *KOYOT* 🐺\n\n"
         f"{get_status()}\n\n"
@@ -437,20 +448,7 @@ async def order_item(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
 
-    # Через 2 секунди просимо залишити відгук
-    await asyncio.sleep(2)
-    review_builder = InlineKeyboardBuilder()
-    review_builder.button(text="⭐️ 1", callback_data="review_1")
-    review_builder.button(text="⭐️ 2", callback_data="review_2")
-    review_builder.button(text="⭐️ 3", callback_data="review_3")
-    review_builder.button(text="⭐️ 4", callback_data="review_4")
-    review_builder.button(text="⭐️ 5", callback_data="review_5")
-    review_builder.adjust(5)
-    await bot.send_message(
-        chat_id=callback.message.chat.id,
-        text="💬 Як тобі наш сервіс?\nПостав оцінку від 1 до 5 ⭐️",
-        reply_markup=review_builder.as_markup()
-    )
+
 
 
 # ============================================
