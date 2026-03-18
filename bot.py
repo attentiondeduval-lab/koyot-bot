@@ -1223,6 +1223,34 @@ async def send_order(uid, phone="—"):
 async def receive_phone(message: types.Message):
     uid = message.from_user.id
     phone = message.text.strip()
+
+    # Валідація номера — тільки цифри і пробіли
+    digits_only = phone.replace(" ", "").replace("-", "")
+
+    if not digits_only.isdigit():
+        await message.answer(
+            "❗️ Номер має містити тільки цифри.\n"
+            "Спробуй ще раз у форматі: _066 503 94 33_",
+            parse_mode="Markdown"
+        )
+        return
+
+    if len(digits_only) < 10:
+        await message.answer(
+            "❗️ Номер занадто короткий — має бути мінімум *10 цифр*.\n"
+            "Спробуй ще раз у форматі: _066 503 94 33_",
+            parse_mode="Markdown"
+        )
+        return
+
+    if not digits_only.startswith("0"):
+        await message.answer(
+            "❗️ Номер має починатись з *0*.\n"
+            "Спробуй ще раз у форматі: _066 503 94 33_",
+            parse_mode="Markdown"
+        )
+        return
+
     await send_order(uid, phone=phone)
 
 
