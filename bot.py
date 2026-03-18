@@ -195,7 +195,7 @@ async def menu_big(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",     callback_data="big_lavash")
     builder.button(text="🍞 В булці",      callback_data="big_bulka")
-    builder.button(text="🔙 Назад",        callback_data="back_main")
+    builder.button(text="🏠 Головне меню",        callback_data="back_main")
     builder.adjust(2, 1)
     await callback.message.edit_text(
         "🔴 *БІГ МЕНЮ* — великий розмір\n\nОбери тип:",
@@ -253,7 +253,7 @@ async def menu_mid(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",   callback_data="mid_lavash")
     builder.button(text="🍞 В булці",    callback_data="mid_bulka")
-    builder.button(text="🔙 Назад",      callback_data="back_main")
+    builder.button(text="🏠 Головне меню",      callback_data="back_main")
     builder.adjust(2, 1)
     await callback.message.edit_text(
         "🟡 *СЕРЕДНЄ МЕНЮ* — середній розмір\n\nОбери тип:",
@@ -370,7 +370,7 @@ async def order_item(callback: types.CallbackQuery):
 
     builder = InlineKeyboardBuilder()
     builder.button(text="📲 Написати замовлення в чат", url="https://t.me/koyot_cv")
-    builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
 
     await callback.message.answer(
@@ -408,7 +408,7 @@ async def recommend(callback: types.CallbackQuery):
     builder.button(text="👉 🔥 Дуже голодний ← популярний вибір", callback_data="r_hungry")
     builder.button(text="😊 Середній апетит",     callback_data="r_medium")
     builder.button(text="🥗 Хочу щось легке",     callback_data="r_light")
-    builder.button(text="🔙 Назад",               callback_data="back_main")
+    builder.button(text="🏠 Головне меню",               callback_data="back_main")
     builder.adjust(1)
     try:
         await callback.message.delete()
@@ -557,7 +557,7 @@ async def spin_wheel(callback: types.CallbackQuery):
     mark_spun_today(user_id)
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
 
     e = prize['emoji']
@@ -712,7 +712,7 @@ async def receive_order_text(message: types.Message):
 
     # Повідомляємо клієнта
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔙 Повернутись в меню", callback_data="back_main")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await message.answer(
         f"📨 *Замовлення відправлено!*\n\n"
