@@ -142,7 +142,7 @@ def size_question_keyboard():
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
-    builder.button(text="📍 Ми на карті", url="https://maps.google.com/?q=Головна+Вулиця+185,+Чернівці")
+    builder.button(text="📍 Ми на карті", url="https://maps.app.goo.gl/tGEFHTZsb9kzDt8J7")
     builder.adjust(1)
     return builder.as_markup()
 
