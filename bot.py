@@ -432,7 +432,7 @@ async def order_item(callback: types.CallbackQuery):
     await callback.message.answer(
         f"✅ Чудовий вибір!\n\n"
         f"🍽 *{item['name']}* — {item['price']} ₴\n\n"
-        f"✍️ Введи своє *ім'я* щоб ми могли прийняти замовлення:",
+        f"📝 *Крок 1 з 2 — Введи своє ім'я:*",
         reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -1126,10 +1126,10 @@ async def receive_name(message: types.Message):
     skip_builder.adjust(1)
 
     await message.answer(
-        f"👤 Ім'я: *{client_name}*\n"
-        f"🍽 {item_name} — {item_price} ₴\n\n"
-        f"✍️ Напиши побажання до замовлення:\n"
-        f"_(наприклад: без соусу, без помідорів)_\n\n"
+        f"✅ Ім'я: *{client_name}*\n\n"
+        f"✍️ *Крок 1.5 — Побажання* _(необов'язково)_\n"
+        f"Напиши побажання до замовлення:\n"
+        f"_(без соусу, без помідорів...)_\n\n"
         f"Або натисни *Без побажань*",
         reply_markup=skip_builder.as_markup(),
         parse_mode="Markdown"
@@ -1142,7 +1142,7 @@ async def finalize_order(uid, notes="—"):
     item_price = order_data.get("price", "—")
     client_name = order_data.get("name", "—")
 
-    # Просимо номер телефону
+    # Просимо номер телефону — ОБОВ'ЯЗКОВО
     waiting_phone[uid] = {
         "item": item_name,
         "price": item_price,
@@ -1150,16 +1150,16 @@ async def finalize_order(uid, notes="—"):
         "notes": notes
     }
 
-    skip_builder = InlineKeyboardBuilder()
-    skip_builder.button(text="⏭ Пропустити", callback_data="skip_phone")
-    skip_builder.adjust(1)
+    cancel_builder = InlineKeyboardBuilder()
+    cancel_builder.button(text="❌ Скасувати замовлення", callback_data="cancel_name")
+    cancel_builder.adjust(1)
 
     await bot.send_message(
         chat_id=uid,
-        text=f"📞 Вкажи свій номер телефону щоб ми могли з тобою зв'язатись:\n"
-             f"_(наприклад: 0991234567)_\n\n"
-             f"Або натисни *Пропустити*",
-        reply_markup=skip_builder.as_markup(),
+        text=f"📞 *Крок 2 з 2 — Номер телефону*\n\n"
+             f"Вкажи свій номер телефону — це обов'язково щоб ми могли підтвердити замовлення:\n\n"
+             f"_(наприклад: 0991234567)_",
+        reply_markup=cancel_builder.as_markup(),
         parse_mode="Markdown"
     )
 
@@ -1216,14 +1216,7 @@ async def send_order(uid, phone="—"):
     )
 
 
-@dp.callback_query(F.data == "skip_phone")
-async def skip_phone_handler(callback: types.CallbackQuery):
-    uid = callback.from_user.id
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await send_order(uid, phone="—")
+# Телефон обов'язковий — skip видалено
 
 
 @dp.message(lambda m: m.from_user.id in waiting_phone and m.from_user.id not in user_stars and m.from_user.id not in waiting_name and m.from_user.id not in waiting_notes)
