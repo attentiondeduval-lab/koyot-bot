@@ -207,7 +207,7 @@ async def menu_big(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "big_lavash")
 async def big_lavash(callback: types.CallbackQuery):
-    items = MENU["big_lavash"]
+    items = [i for i in MENU["big_lavash"] if i["id"] not in disabled_items]
     builder = InlineKeyboardBuilder()
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_lavash")
@@ -228,7 +228,7 @@ async def big_lavash(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "big_bulka")
 async def big_bulka(callback: types.CallbackQuery):
-    items = MENU["big_bulka"]
+    items = [i for i in MENU["big_bulka"] if i["id"] not in disabled_items]
     builder = InlineKeyboardBuilder()
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_bulka")
@@ -267,7 +267,7 @@ async def menu_mid(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "mid_lavash")
 async def mid_lavash(callback: types.CallbackQuery):
-    items = MENU["mid_lavash"]
+    items = [i for i in MENU["mid_lavash"] if i["id"] not in disabled_items]
     builder = InlineKeyboardBuilder()
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_lavash")
@@ -288,7 +288,7 @@ async def mid_lavash(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "mid_bulka")
 async def mid_bulka(callback: types.CallbackQuery):
-    items = MENU["mid_bulka"]
+    items = [i for i in MENU["mid_bulka"] if i["id"] not in disabled_items]
     builder = InlineKeyboardBuilder()
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_bulka")
@@ -321,6 +321,44 @@ async def show_dish(callback: types.CallbackQuery):
 
     if not item:
         await callback.answer("Страву не знайдено")
+        return
+
+    # Перевіряємо чи позиція доступна
+    if item_id in disabled_items:
+        builder_na = InlineKeyboardBuilder()
+        builder_na.button(text="💬 Написати в підтримку", url="https://t.me/koyot_cv")
+        builder_na.button(text="🏠 Головне меню", callback_data="back_main")
+        builder_na.adjust(1)
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="❌ *На жаль, ця позиція зараз недоступна.*\n\n"
+                 "Зверніться в підтримку або оберіть інше блюдо.",
+            reply_markup=builder_na.as_markup(),
+            parse_mode="Markdown"
+        )
+        return
+
+    # Перевіряємо чи заклад відкритий
+    if not is_open:
+        builder_closed = InlineKeyboardBuilder()
+        builder_closed.button(text="🏠 Головне меню", callback_data="back_main")
+        builder_closed.adjust(1)
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+        await bot.send_message(
+            chat_id=callback.message.chat.id,
+            text="🔴 *Замовлення зараз недоступні.*\n\n"
+                 "Заклад тимчасово не приймає замовлення через бота.\n"
+                 "Зателефонуйте нам: 099 054 45 35",
+            reply_markup=builder_closed.as_markup(),
+            parse_mode="Markdown"
+        )
         return
 
     builder = InlineKeyboardBuilder()
@@ -363,6 +401,10 @@ async def show_dish(callback: types.CallbackQuery):
 async def order_item(callback: types.CallbackQuery):
     item_id = callback.data.split("|")[1]
     item = ALL_ITEMS.get(item_id)
+
+    if not is_open:
+        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
+        return
 
     # Записуємо клієнта
     uid = callback.from_user.id
@@ -1055,6 +1097,15 @@ waiting_notes = {}
 # Кошик клієнта {user_id: [{"item": ..., "price": ...}, ...]}
 cart = {}
 
+# Вимкнені позиції адміном {item_id: True}
+disabled_items = set()
+
+# Чи відкритий заклад для замовлень
+is_open = True
+
+# Очікуємо номер телефону {user_id: order_data}
+waiting_phone = {}
+
 @dp.message(lambda m: m.from_user.id in waiting_name and m.from_user.id not in user_stars)
 async def receive_name(message: types.Message):
     uid = message.from_user.id
@@ -1091,13 +1142,43 @@ async def finalize_order(uid, notes="—"):
     item_price = order_data.get("price", "—")
     client_name = order_data.get("name", "—")
 
+    # Просимо номер телефону
+    waiting_phone[uid] = {
+        "item": item_name,
+        "price": item_price,
+        "name": client_name,
+        "notes": notes
+    }
+
+    skip_builder = InlineKeyboardBuilder()
+    skip_builder.button(text="⏭ Пропустити", callback_data="skip_phone")
+    skip_builder.adjust(1)
+
+    await bot.send_message(
+        chat_id=uid,
+        text=f"📞 Вкажи свій номер телефону щоб ми могли з тобою зв'язатись:\n"
+             f"_(наприклад: 0991234567)_\n\n"
+             f"Або натисни *Пропустити*",
+        reply_markup=skip_builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+
+async def send_order(uid, phone="—"):
+    order_data = waiting_phone.pop(uid, {})
+    item_name = order_data.get("item", "—")
+    item_price = order_data.get("price", "—")
+    client_name = order_data.get("name", "—")
+    notes = order_data.get("notes", "—")
+
     # Зберігаємо замовлення
     orders_pending[client_name] = {
         "user_id": uid,
         "item": item_name,
         "price": item_price,
         "name": client_name,
-        "notes": notes
+        "notes": notes,
+        "phone": phone
     }
 
     # Повідомляємо клієнта
@@ -1106,11 +1187,12 @@ async def finalize_order(uid, notes="—"):
     builder.adjust(1)
 
     notes_text = f"\n📝 Побажання: _{notes}_" if notes != "—" else ""
+    phone_text = f"\n📞 Телефон: {phone}" if phone != "—" else ""
     await bot.send_message(
         chat_id=uid,
         text=f"📨 *{client_name}, замовлення відправлено!*\n\n"
              f"🍽 {item_name} — {item_price} ₴"
-             f"{notes_text}\n\n"
+             f"{notes_text}{phone_text}\n\n"
              f"⏳ Очікуй підтвердження від закладу...",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
@@ -1120,6 +1202,7 @@ async def finalize_order(uid, notes="—"):
     admin_text = (
         "🔔 *Нове замовлення!*\n\n"
         "👤 Ім'я: *" + client_name + "*\n"
+        "📞 Телефон: " + phone + "\n"
         "🍽 Страва: *" + item_name + "* — " + str(item_price) + " ₴\n"
         "📝 Побажання: " + notes + "\n\n"
         "✅ Підтвердити і вказати час:\n"
@@ -1131,6 +1214,23 @@ async def finalize_order(uid, notes="—"):
         text=admin_text,
         parse_mode="Markdown"
     )
+
+
+@dp.callback_query(F.data == "skip_phone")
+async def skip_phone_handler(callback: types.CallbackQuery):
+    uid = callback.from_user.id
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await send_order(uid, phone="—")
+
+
+@dp.message(lambda m: m.from_user.id in waiting_phone and m.from_user.id not in user_stars and m.from_user.id not in waiting_name and m.from_user.id not in waiting_notes)
+async def receive_phone(message: types.Message):
+    uid = message.from_user.id
+    phone = message.text.strip()
+    await send_order(uid, phone=phone)
 
 
 @dp.callback_query(F.data == "skip_notes")
@@ -1229,6 +1329,99 @@ async def show_clients(message: types.Message):
         text += "\n"
 
     await message.answer(text, parse_mode="Markdown")
+
+
+# ============================================
+#  ВІДКРИТТЯ / ЗАКРИТТЯ ЗАМОВЛЕНЬ
+# ============================================
+
+@dp.message(lambda m: m.text == "/open" and m.from_user.id == ADMIN_ID)
+async def open_orders(message: types.Message):
+    global is_open
+    is_open = True
+    await message.answer(
+        "🟢 *Замовлення ВІДКРИТО!*\n\n"
+        "Клієнти можуть робити замовлення через бота.",
+        parse_mode="Markdown"
+    )
+
+
+@dp.message(lambda m: m.text == "/close" and m.from_user.id == ADMIN_ID)
+async def close_orders(message: types.Message):
+    global is_open
+    is_open = False
+    await message.answer(
+        "🔴 *Замовлення ЗАКРИТО!*\n\n"
+        "Клієнти не зможуть робити замовлення через бота.",
+        parse_mode="Markdown"
+    )
+
+
+@dp.message(lambda m: m.text == "/status" and m.from_user.id == ADMIN_ID)
+async def check_status(message: types.Message):
+    status = "🟢 ВІДКРИТО" if is_open else "🔴 ЗАКРИТО"
+    disabled_count = len(disabled_items)
+    await message.answer(
+        f"📊 *Статус закладу:* {status}\n"
+        f"🚫 Вимкнених позицій: {disabled_count}\n\n"
+        f"Команди:\n"
+        f"/open — відкрити замовлення\n"
+        f"/close — закрити замовлення\n"
+        f"/off — вимкнути позицію\n"
+        f"/on — увімкнути позицію\n"
+        f"/stats — статистика\n"
+        f"/clients — список клієнтів",
+        parse_mode="Markdown"
+    )
+
+
+# ============================================
+#  ВИМКНЕННЯ ПОЗИЦІЙ АДМІНОМ
+# ============================================
+
+@dp.message(lambda m: m.text and m.text.startswith("/off") and m.from_user.id == ADMIN_ID)
+async def disable_item(message: types.Message):
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        # Показуємо список всіх позицій
+        text = "📋 *Всі позиції меню:*\n\n"
+        for item_id, item in ALL_ITEMS.items():
+            status = "🔴 ВИМКНЕНО" if item_id in disabled_items else "🟢"
+            text += f"{status} /off {item_id} — {item['name']}\n"
+        text += "\n*Для увімкнення:* /on item_id"
+        await message.answer(text, parse_mode="Markdown")
+        return
+
+    item_id = parts[1].strip()
+    if item_id not in ALL_ITEMS:
+        await message.answer(f"❗️ Позицію *{item_id}* не знайдено.\n\nНапиши /off щоб побачити список", parse_mode="Markdown")
+        return
+
+    disabled_items.add(item_id)
+    item_name = ALL_ITEMS[item_id]["name"]
+    await message.answer(f"🔴 *{item_name}* вимкнено з меню!", parse_mode="Markdown")
+
+
+@dp.message(lambda m: m.text and m.text.startswith("/on") and m.from_user.id == ADMIN_ID)
+async def enable_item(message: types.Message):
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        if not disabled_items:
+            await message.answer("✅ Всі позиції активні!")
+            return
+        text = "🔴 *Вимкнені позиції:*\n\n"
+        for item_id in disabled_items:
+            text += f"/on {item_id} — {ALL_ITEMS[item_id]['name']}\n"
+        await message.answer(text, parse_mode="Markdown")
+        return
+
+    item_id = parts[1].strip()
+    if item_id in disabled_items:
+        disabled_items.remove(item_id)
+        item_name = ALL_ITEMS[item_id]["name"]
+        await message.answer(f"🟢 *{item_name}* увімкнено в меню!", parse_mode="Markdown")
+    else:
+        await message.answer(f"✅ Позиція вже активна!")
 
 
 async def main():
