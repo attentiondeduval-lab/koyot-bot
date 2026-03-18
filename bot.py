@@ -149,12 +149,19 @@ def get_status():
         return "🔴 *ЗАЧИНЕНО* · Відкриємось завтра о 10:00"
 
 
-def size_question_keyboard():
+def size_question_keyboard(uid=None):
     builder = InlineKeyboardBuilder()
     builder.button(text="🔴 Великий розмір — БІГ МЕНЮ", callback_data="menu_big")
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
+    # Кошик з лічильником
+    count = len(cart.get(uid, [])) if uid else 0
+    if count > 0:
+        total = sum(i["price"] for i in cart.get(uid, []))
+        builder.button(text=f"🛒 Кошик ({count} поз. · {total} ₴)", callback_data="view_cart")
+    else:
+        builder.button(text="🛒 Кошик (порожній)", callback_data="view_cart")
     builder.button(text="📍 Ми на карті", url="http://bit.ly/4lB6sM9")
     builder.button(text="💬 Підтримка / Питання", url="https://t.me/koyot_cv")
     builder.adjust(1)
@@ -184,7 +191,7 @@ async def start(message: types.Message):
         f"📞 *Телефон:* 099 054 45 35\n\n"
         f"━━━━━━━━━━━━━━━━{banner}\n"
         f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?",
-        reply_markup=size_question_keyboard(),
+        reply_markup=size_question_keyboard(uid=message.from_user.id),
         parse_mode="Markdown"
     )
 
@@ -200,7 +207,7 @@ async def back_main(callback: types.CallbackQuery):
     await bot.send_message(
         chat_id=callback.message.chat.id,
         text=f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?{banner}",
-        reply_markup=size_question_keyboard(),
+        reply_markup=size_question_keyboard(uid=callback.from_user.id),
         parse_mode="Markdown"
     )
 
@@ -939,7 +946,7 @@ async def clear_cart(callback: types.CallbackQuery):
     await bot.send_message(
         chat_id=uid,
         text="🗑 Кошик очищено!",
-        reply_markup=size_question_keyboard()
+        reply_markup=size_question_keyboard(uid=uid)
     )
 
 
