@@ -142,7 +142,7 @@ def size_question_keyboard():
     builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
     builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
     builder.button(text="🎰 Крутилка удачі", callback_data="spin")
-    builder.button(text="📍 Ми на карті", url="https://www.google.com/maps/place/%D0%9A%D0%BE%D0%B9%D0%BE%D1%82/@48.2705664,25.9470452,19z/data=!3m1!4b1!4m15!1m8!3m7!1s0x473408ce52a8dd21:0x5cd4a749150ae07!2z0JrQvtC50L7Rgg!8m2!3d48.2705655!4d25.9476903!10e5!16s%2Fg%2F11g8_6fxh3!3m5!1s0x473408ce52a8dd21:0x5cd4a749150ae07!8m2!3d48.2705655!4d25.9476903!16s%2Fg%2F11g8_6fxh3")
+    builder.button(text="📍 Ми на карті", url="https://www.google.com/maps/place/%D0%9A%D0%BE%D0%B9%D0%BE%D1%82/@48.2705664,25.9470452,19z/data=!3m1!4b1!4m15!1m8!3m7!1s0x473408ce52a8dd21:0x5cd4a749150ae07!2z0JrQvtC50L7Rgg!8m2!3d48.2705655!4d25.9476903!10e5!16s%2Fg%2F11g8_6fxh3!3m5!1s0x473408ce52a8dd21:0x5cd4a749150ae07!8m2!3d48.2705655!4d25.9476903!16s%2Fg%2F11g8_6fxh3!18m1!1e1?entry=ttu&g_ep=EgoyMDI2MDMxNS4wIKXMDSoASAFQAw%3D%3D")
     builder.adjust(1)
     return builder.as_markup()
 
