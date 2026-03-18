@@ -211,6 +211,7 @@ async def big_lavash(callback: types.CallbackQuery):
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_lavash")
     builder.button(text="🔙 Назад", callback_data="menu_big")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     try:
         await callback.message.delete()
@@ -231,6 +232,7 @@ async def big_bulka(callback: types.CallbackQuery):
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|big_bulka")
     builder.button(text="🔙 Назад", callback_data="menu_big")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     try:
         await callback.message.delete()
@@ -269,6 +271,7 @@ async def mid_lavash(callback: types.CallbackQuery):
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_lavash")
     builder.button(text="🔙 Назад", callback_data="menu_mid")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     try:
         await callback.message.delete()
@@ -289,6 +292,7 @@ async def mid_bulka(callback: types.CallbackQuery):
     for item in items:
         builder.button(text=f"{item['name']} — {item['price']} ₴", callback_data=f"dish|{item['id']}|mid_bulka")
     builder.button(text="🔙 Назад", callback_data="menu_mid")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     try:
         await callback.message.delete()
@@ -321,6 +325,7 @@ async def show_dish(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(text="✅ Хочу замовити!", callback_data=f"order|{item_id}")
     builder.button(text="🔙 Назад",          callback_data=back_cat)
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
 
     caption = (
@@ -427,6 +432,7 @@ async def r_hungry(callback: types.CallbackQuery):
     builder.button(text="🌯 Люблю лаваш",   callback_data="dish|coyote|big_lavash")
     builder.button(text="🍞 Хочу в булці",  callback_data="dish|bigjo|big_bulka")
     builder.button(text="🔙 Назад",          callback_data="recommend")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await callback.message.edit_text(
         "Ти дуже голодний — беремо БІГ МЕНЮ! 💪\n\nЩо більше подобається?",
@@ -441,6 +447,7 @@ async def r_medium(callback: types.CallbackQuery):
     builder.button(text="🍞 Тост з куркою",       callback_data="dish|toastchick|mid_bulka")
     builder.button(text="🌯 Загнаний Койот",      callback_data="dish|coyote|big_lavash")
     builder.button(text="🔙 Назад",               callback_data="recommend")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await callback.message.edit_text(
         "Середній апетит — є відмінні варіанти! 😋\n\nОбери що цікавить:",
@@ -455,6 +462,7 @@ async def r_light(callback: types.CallbackQuery):
     builder.button(text="🌯 Сендвіч-Cheese-рол",   callback_data="dish|cheeseroll|mid_lavash")
     builder.button(text="🍞 Тост з шинкою",         callback_data="dish|toastham|mid_bulka")
     builder.button(text="🔙 Назад",                 callback_data="recommend")
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
     builder.adjust(1)
     await callback.message.edit_text(
         "Хочеш щось легке — середнє меню ідеально! 🥗\n\nОбери варіант:",
