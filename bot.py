@@ -160,6 +160,9 @@ def size_question_keyboard():
     builder.adjust(1)
     return builder.as_markup()
 
+def closed_banner():
+    return "\n⚠️ _Зараз ми закриті — замовлення не приймаються._\n"
+
 def main_menu_keyboard():
     builder = InlineKeyboardBuilder()
     builder.button(text="🔴 БІГ МЕНЮ (великий розмір)",    callback_data="menu_big")
@@ -172,24 +175,14 @@ def main_menu_keyboard():
 # --- СТАРТ ---
 @dp.message(CommandStart())
 async def start(message: types.Message):
-    if not state["is_open"]:
-        await message.answer(
-            "🔴 *Нажаль, зараз ми не приймаємо замовлення.*\n\n"
-            "Заклад тимчасово закритий.\n\n"
-            "📞 *Для зв'язку:* 099 054 45 35\n"
-            "💬 *Написати нам:* @koyot_cv\n\n"
-            "Завітайте до нас пізніше! 🐺",
-            parse_mode="Markdown"
-        )
-        return
-
+    banner = closed_banner() if not state["is_open"] else ""
     await message.answer(
         f"👋 Привіт! Ласкаво просимо до *KOYOT* 🐺\n\n"
         f"{get_status()}\n\n"
         f"🕐 *Години роботи:*\n"
         f"Пн–Пт: 10:00 – 21:00\n\n"
         f"📞 *Телефон:* 099 054 45 35\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
+        f"━━━━━━━━━━━━━━━━{banner}\n"
         f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?",
         reply_markup=size_question_keyboard(),
         parse_mode="Markdown"
@@ -203,12 +196,10 @@ async def back_main(callback: types.CallbackQuery):
         await callback.message.delete()
     except Exception:
         pass
-    if not state["is_open"]:
-        await send_closed_message(callback.message.chat.id)
-        return
+    banner = closed_banner() if not state["is_open"] else ""
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text="🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?",
+        text=f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?{banner}",
         reply_markup=size_question_keyboard(),
         parse_mode="Markdown"
     )
@@ -220,9 +211,6 @@ async def back_main(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "menu_big")
 async def menu_big(callback: types.CallbackQuery):
-    if not state["is_open"]:
-        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
-        return
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",     callback_data="big_lavash")
     builder.button(text="🍞 В булці",      callback_data="big_bulka")
@@ -283,9 +271,6 @@ async def big_bulka(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "menu_mid")
 async def menu_mid(callback: types.CallbackQuery):
-    if not state["is_open"]:
-        await callback.answer("🔴 Замовлення зараз недоступні!", show_alert=True)
-        return
     builder = InlineKeyboardBuilder()
     builder.button(text="🌯 В лаваші",   callback_data="mid_lavash")
     builder.button(text="🍞 В булці",    callback_data="mid_bulka")
@@ -394,9 +379,15 @@ async def show_dish(callback: types.CallbackQuery):
         )
         return
 
+    cart_count = len(cart.get(callback.from_user.id, []))
+    cart_label = f"🛒 Кошик ({cart_count})" if cart_count > 0 else "🛒 Кошик"
     builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
-    builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
+    if state["is_open"]:
+        builder.button(text="✅ Замовити тільки це", callback_data=f"order|{item_id}")
+        builder.button(text="🛒 Додати в кошик",     callback_data=f"addcart|{item_id}")
+    else:
+        builder.button(text="⚠️ Зараз закрито",     callback_data="closed_info")
+    builder.button(text=cart_label,              callback_data="view_cart")
     builder.button(text="🔙 Назад",              callback_data=back_cat)
     builder.button(text="🏠 Головне меню",       callback_data="back_main")
     builder.adjust(1)
@@ -1368,6 +1359,14 @@ async def enable_item(message: types.Message):
         await message.answer(f"🟢 *{item_name}* увімкнено в меню!", parse_mode="Markdown")
     else:
         await message.answer(f"✅ Позиція вже активна!")
+
+
+@dp.callback_query(F.data == "closed_info")
+async def closed_info(callback: types.CallbackQuery):
+    await callback.answer(
+        "🔴 Зараз ми закриті!\n📞 099 054 45 35",
+        show_alert=True
+    )
 
 
 async def main():
