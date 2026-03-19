@@ -16,85 +16,84 @@ ADMIN_ID = 5320781358  # Сюди приходять відгуки
 
 # ============================================
 #  ШАГ 2: ВСТАВЬ ССЫЛКИ НА ФОТО
-#  Как получить ссылку:
-#  1. Зайди на imgbb.com
-#  2. Загрузи фото
-#  3. Скопируй "Direct link" и вставь сюда
 # ============================================
 
-PHOTOS = {
-    "sunrise":      "https://i.ibb.co/h1t1825t/image.jpg",
-    "coyote":       "https://i.ibb.co/cXMZ8c1G/IMG-5922.jpg",
-    "bigjo":        "https://i.ibb.co/ZpNMn232/IMG-5924.jpg",
-    "cheeseroll":  "https://i.ibb.co/xqrfCgyT/IMG-5928.jpg",
-    "hamroll":     "https://i.ibb.co/1tpQvF50/IMG-5927.jpg",
-    "toastham":    "https://i.ibb.co/R4H99131/IMG-5926.jpg",
-    "toastchick":  "https://i.ibb.co/twGZv8kb/IMG-5925.jpg",
-}
+PHOTOS = {}  # Фото будуть додані пізніше
 
 # ============================================
-#  МЕНЮ — структура бота
+#  КАТЕГОРІЇ МЕНЮ
 # ============================================
+
+CATEGORIES = [
+    "🌭 Хот-дог меню",
+    "🍔 Бургер меню",
+    "🔴 Біг меню",
+    "🌯 Сендвіч меню",
+    "🍞 Меню з тостів",
+    "🥗 Веган меню",
+    "🥤 Напої",
+]
 
 MENU = {
-    # -------- БІГ МЕНЮ --------
-    "big_lavash": [
-        {
-            "id": "sunrise",
-            "name": "Санрайс Курячий",
-            "price": 330,
-            "desc": "Лаваш, салат з капусти, маринований огірок, помідор, курячий стейк, картопля фрі, сир, бринза, соус.",
-            "photo": PHOTOS["sunrise"],
-        },
-        {
-            "id": "coyote",
-            "name": "Загнаний Койот",
-            "price": 350,
-            "desc": "Лаваш, тушена цибуля, гриби, свинні сосиски, бекон, перець Чилі, картопля фрі, сир, бринза, соуси.",
-            "photo": PHOTOS["coyote"],
-        },
+    "🌭 Хот-дог меню": [
+        {"id": "hotdog_mex",     "name": "Хот-дог «Мексиканський»", "price": 200, "desc": "Булка «Чіабата», соус, сосиска, сир, бекон, тушена цибуля, огірки мариновані, перець чилі, бринза.", "photo": None},
+        {"id": "hotdog_class",   "name": "Хот-дог «Класичний»",     "price": 185, "desc": "Булка «Чіабата», сосиска, сир, соуси, фіолетова капуста, морква по-корейськи, салат «Айсберг», огірки мариновані, бринза.", "photo": None},
+        {"id": "hotdog_corn",    "name": "Хот-дог «Корн-дог»",      "price": 170, "desc": "Булка «Чіабата», сирний соус, сосиска, сир, салат «Айсберг», кукурудза, огірки мариновані.", "photo": None},
     ],
-    "big_bulka": [
-        {
-            "id": "bigjo",
-            "name": "Біг-Джо",
-            "price": 360,
-            "desc": "Чіабата, сир, бринза, дві котлети, бекон, салат Біонда, рукола, свіжі томати, мариновані огірки, маринована цибуля, соус.",
-            "photo": PHOTOS["bigjo"],
-        },
+    "🍔 Бургер меню": [
+        {"id": "burger",         "name": "Бургер",                   "price": 155, "desc": "Булка бріош з кунжутом, соуси, сир, котлета, бекон, листя салату, помідор, огірки мариновані, цибуля.", "photo": None},
+        {"id": "double_burger",  "name": "Дабл-бургер",              "price": 190, "desc": "Булка бріош з кунжутом, соуси, сир, бринза, дві котлети, бекон, листя салату, помідор, огірки мариновані, цибуля.", "photo": None},
+        {"id": "burger_chick",   "name": "Бургер з куркою",          "price": 180, "desc": "Булка бріош з кунжутом, соуси, сир, філе куряче, морква по-корейськи, листя салату, помідор, огірки мариновані, цибуля.", "photo": None},
+        {"id": "burger_turkey",  "name": "Бургер з індичкою",        "price": 210, "desc": "Булка бріош з кунжутом, соуси, сир, філе індички, морква по-корейськи, листя салату, помідор, огірки мариновані, цибуля.", "photo": None},
+        {"id": "fries_200",      "name": "Картопля-фрі (200г)",      "price": 150, "desc": "Фрі, сир, бринза, соуси.", "photo": None},
+        {"id": "fries_100",      "name": "Картопля-фрі (100г)",      "price": 100, "desc": "Фрі, сир, бринза, соуси.", "photo": None},
+        {"id": "fries_salad",    "name": "Картопля-фрі з салатом",   "price": 200, "desc": "Фрі, сир, бринза, морква по-корейськи, капуста фіолетова, огірки мариновані, соуси.", "photo": None},
+        {"id": "sauce",          "name": "Соус до фрі",              "price": 25,  "desc": "Соус на вибір.", "photo": None},
+        {"id": "chili",          "name": "Перець чилі",              "price": 30,  "desc": "Гострий перець чилі.", "photo": None},
     ],
-    # -------- СЕРЕДНЄ МЕНЮ --------
-    "mid_lavash": [
-        {
-            "id": "cheeseroll",
-            "name": "Сендвіч-Cheese-рол",
-            "price": 250,
-            "desc": "Лаваш, куряче філе, подвійний сир, помідор, салат Біонда, сирний соус.",
-            "photo": PHOTOS["cheeseroll"],
-        },
-        {
-            "id": "hamroll",
-            "name": "Сендвіч-рол з шинкою",
-            "price": 230,
-            "desc": "Лаваш, сир, бринза, свинна шинка, гриби, помідор, салат, капуста, соус.",
-            "photo": PHOTOS["hamroll"],
-        },
+    "🔴 Біг меню": [
+        {"id": "coyote",         "name": "«Загнаний Койот»",         "price": 290, "desc": "Лаваш, соуси, салат «Айсберг», тушена цибуля, гриби мариновані, помідор, огірки мариновані, перець чилі, свині сосиски, бекон, картопля фрі, сир, бринза.", "photo": None},
+        {"id": "sunrise",        "name": "«Санрайс Курячий»",        "price": 270, "desc": "Лаваш, соуси, капуста фіолетова, помідор, огірки мариновані, курячий стейк, картопля фрі, сир, бринза.", "photo": None},
+        {"id": "sunrise_turkey", "name": "«Санрайс з індичкою»",     "price": 290, "desc": "Лаваш, соуси, капуста фіолетова, помідор, огірки мариновані, стейк індички, картопля фрі, сир, бринза.", "photo": None},
+        {"id": "big_sandwich",   "name": "«Біг-Сендвіч»",            "price": 290, "desc": "Лаваш, соус, салат «Айсберг», помідор, огірки мариновані, три види м'яса (курка, індичка, свинна шинка), картопля фрі, сир, бринза.", "photo": None},
+        {"id": "burrito",        "name": "«Буріто»",                  "price": 270, "desc": "Лаваш, салат «Айсберг», соус, тушена цибуля, гриби мариновані, помідор, огірки мариновані, перець чилі, курячий стейк, сир, бринза.", "photo": None},
+        {"id": "bigjo",          "name": "«Біг-Джо»",                "price": 280, "desc": "Булка «Чіабата», сир, бринза, 2 котлети, бекон, салат «Біонда», помідор, огірок, цибуля, соуси.", "photo": None},
+        {"id": "bigjo_egg",      "name": "«Біг-Джо» з яйцем",       "price": 300, "desc": "Булка «Чіабата», сир, бринза, 2 котлети, бекон, салат «Біонда», помідор, огірок, яйце, цибуля, соуси.", "photo": None},
+        {"id": "peru_lunch",     "name": "«Перуанський ланч»",       "price": 270, "desc": "Булка «Чіабата», сир, бринза, курячий стейк, салат «Біонда», помідор, огірок, цибуля, соуси.", "photo": None},
+        {"id": "peru_turkey",    "name": "«Перуанський ланч з індичкою»", "price": 290, "desc": "Булка «Чіабата», сир, бринза, стейк із індички, салат Біонда, помідор, огірок, цибуля, соуси.", "photo": None},
+        {"id": "big_toast",      "name": "«Біг-Тост»",               "price": 300, "desc": "Булка «Чіабата», соуси, сир, бринза, три види м'яса (курка, індичка, свинна шинка), помідор, огірки мариновані, салат «Айсберг».", "photo": None},
     ],
-    "mid_bulka": [
-        {
-            "id": "toastchick",
-            "name": "Тост з куркою",
-            "price": 255,
-            "desc": "Чіабата, соуси, сир, бринза, мариновані гриби, куряче філе.",
-            "photo": PHOTOS["toastchick"],
-        },
-        {
-            "id": "toastham",
-            "name": "Тост з шинкою",
-            "price": 255,
-            "desc": "Чіабата, соус, сир, бринза, мариновані гриби, свинна шинка.",
-            "photo": PHOTOS["toastham"],
-        },
+    "🌯 Сендвіч меню": [
+        {"id": "sw_chicken",     "name": "Сендвіч-рол з куркою",     "price": 160, "desc": "Лаваш, соуси, сир, бринза, філе куряче, гриби мариновані, салат «Айсберг», капуста фіолетова.", "photo": None},
+        {"id": "sw_ham",         "name": "Сендвіч-рол з шинкою",     "price": 160, "desc": "Лаваш, соуси, сир, бринза, свинна шинка, гриби мариновані, салат «Айсберг», капуста фіолетова.", "photo": None},
+        {"id": "sw_cheese",      "name": "Сендвіч-рол «Cheese»",     "price": 180, "desc": "Лаваш, соус, сир, бринза, подвійний сир, філе куряче, кукурудза, помідор, листя «Айсберг».", "photo": None},
+        {"id": "sw_sausage",     "name": "Сендвіч-рол з сосискою",   "price": 180, "desc": "Лаваш, соуси, сир, бринза, сосиска, капуста фіолетова, морква по-корейськи, помідор, огірки мариновані, салат «Айсберг».", "photo": None},
+        {"id": "sw_avocado",     "name": "Сендвіч-рол «Авокадо»",    "price": 210, "desc": "Лаваш, соус сирний, сир, гуакамоле, кукурудза, салат «Айсберг», філе куряче, яйцепомідор.", "photo": None},
+        {"id": "sw_forest",      "name": "Сендвіч-рол «Лісний»",     "price": 170, "desc": "Лаваш, соуси, капуста фіолетова, морква по-корейськи, салат «Айсберг», гриби мариновані, помідор, огірки мариновані, фрі.", "photo": None},
+    ],
+    "🍞 Меню з тостів": [
+        {"id": "toast_chick",    "name": "Тост з куркою",            "price": 180, "desc": "Булка «Чіабата», соуси, сир, бринза, мариновані гриби, куряче філе.", "photo": None},
+        {"id": "toast_ham",      "name": "Тост з шинкою",            "price": 180, "desc": "Булка «Чіабата», соуси, сир, бринза, мариновані гриби, свинна шинка.", "photo": None},
+        {"id": "toast_salami",   "name": "Тост з салямі",            "price": 180, "desc": "Булка «Чіабата», соуси, сир, бринза, салямі, салат «Айсберг».", "photo": None},
+        {"id": "toast_avocado",  "name": "Тост Авокадо",             "price": 210, "desc": "Булка «Чіабата», соус сирний, сир, куряче філе, кукурудза, яйце, гуакамоле, помідор, салат «Айсберг».", "photo": None},
+    ],
+    "🥗 Веган меню": [
+        {"id": "veg_toast",      "name": "Тост «Вегетаріанський»",   "price": 180, "desc": "Булка «Чіабата», соус сирний, сир, бринза, помідор, гриби мариновані, огірки мариновані, кукурудза, гуакамоле, салат «Айсберг».", "photo": None},
+        {"id": "veg_roll",       "name": "Сендвіч-рол «Вегетаріанський»", "price": 180, "desc": "Лаваш, соус сирний, сир, бринза, капуста фіолетова, гриби мариновані, огірки мариновані, салат «Айсберг», кукурудза.", "photo": None},
+        {"id": "veg_roll_xl",    "name": "Сендвіч-рол «Вегетаріанський» XL", "price": 200, "desc": "Лаваш, соус сирний, сир, бринза, капуста фіолетова, салат «Айсберг», тушена цибуля, гриби мариновані, огірки мариновані, кукурудза, картопля фрі.", "photo": None},
+    ],
+    "🥤 Напої": [
+        {"id": "choco",          "name": "Гарячий шоколад",          "price": 60,  "desc": "Гарячий напій.", "photo": None},
+        {"id": "tea_hot",        "name": "Чай (в асортименті)",      "price": 40,  "desc": "Гарячий чай на вибір.", "photo": None},
+        {"id": "water_05",       "name": "Мінеральна вода 0.5",      "price": 20,  "desc": "Мінеральна вода.", "photo": None},
+        {"id": "water_1",        "name": "Мінеральна вода 1л",       "price": 30,  "desc": "Мінеральна вода.", "photo": None},
+        {"id": "juice",          "name": "Сік 0.5",                  "price": 50,  "desc": "Сік в асортименті.", "photo": None},
+        {"id": "tea_cold",       "name": "Чай холодний 0.5",         "price": 40,  "desc": "Холодний чай.", "photo": None},
+        {"id": "schweppes",      "name": "Schweppes 0.33",           "price": 40,  "desc": "Газований напій.", "photo": None},
+        {"id": "burn",           "name": "Burn 0.25",                "price": 60,  "desc": "Енергетик.", "photo": None},
+        {"id": "still_033",      "name": "Вода в асортименті 0.33",  "price": 30,  "desc": "Вода без газу.", "photo": None},
+        {"id": "still_05",       "name": "Вода в асортименті 0.5",   "price": 30,  "desc": "Вода без газу.", "photo": None},
+        {"id": "still_075",      "name": "Вода в асортименті 0.75",  "price": 50,  "desc": "Вода без газу.", "photo": None},
     ],
 }
 
@@ -151,10 +150,8 @@ def get_status():
 
 def size_question_keyboard(uid=None):
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔴 Великий розмір — БІГ МЕНЮ", callback_data="menu_big")
-    builder.button(text="🟡 Середній розмір", callback_data="menu_mid")
-    builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
-    builder.button(text="🎰 Крутилка удачі", callback_data="spin")
+    for i, cat in enumerate(CATEGORIES):
+        builder.button(text=cat, callback_data=f"cat|{i}")
     # Кошик з лічильником
     count = len(cart.get(uid, [])) if uid else 0
     if count > 0:
@@ -162,6 +159,8 @@ def size_question_keyboard(uid=None):
         builder.button(text=f"🛒 Кошик ({count} поз. · {total} ₴)", callback_data="view_cart")
     else:
         builder.button(text="🛒 Кошик (порожній)", callback_data="view_cart")
+    builder.button(text="🎯 Допоможи вибрати", callback_data="recommend")
+    builder.button(text="🎰 Крутилка удачі", callback_data="spin")
     builder.button(text="📍 Ми на карті", url="http://bit.ly/4lB6sM9")
     builder.button(text="💬 Підтримка / Питання", url="https://t.me/koyot_cv")
     builder.adjust(1)
@@ -206,14 +205,44 @@ async def back_main(callback: types.CallbackQuery):
     banner = closed_banner() if not state["is_open"] else ""
     await bot.send_message(
         chat_id=callback.message.chat.id,
-        text=f"🤔 Яку порцію бажаєте обрати —\n*великий* чи *середній* розмір?{banner}",
+        text=f"🤔 Оберіть категорію меню:{banner}",
         reply_markup=size_question_keyboard(uid=callback.from_user.id),
         parse_mode="Markdown"
     )
 
 
 # ============================================
-#  БІГ МЕНЮ
+#  КАТЕГОРІЇ МЕНЮ (універсальний обробник)
+# ============================================
+
+@dp.callback_query(F.data.startswith("cat|"))
+async def show_category(callback: types.CallbackQuery):
+    cat_index = int(callback.data.split("|")[1])
+    cat_name = CATEGORIES[cat_index]
+    items = [i for i in MENU[cat_name] if i["id"] not in disabled_items]
+
+    builder = InlineKeyboardBuilder()
+    for item in items:
+        builder.button(
+            text=f"{item['name']} — {item['price']} ₴",
+            callback_data=f"dish|{item['id']}|cat|{cat_index}"
+        )
+    builder.button(text="🏠 Головне меню", callback_data="back_main")
+    builder.adjust(1)
+
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=f"{cat_name}\n\nОберіть страву:",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+# ============================================
+#  БІГ МЕНЮ (залишаємо для сумісності)
 # ============================================
 
 @dp.callback_query(F.data == "menu_big")
@@ -339,9 +368,12 @@ async def mid_bulka(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("dish|"))
 async def show_dish(callback: types.CallbackQuery):
     parts = callback.data.split("|")
-    # dish|id|back_category
     item_id = parts[1]
-    back_cat = parts[2]
+    # Handle both old format (dish|id|cat_name) and new format (dish|id|cat|index)
+    if len(parts) >= 4 and parts[2] == "cat":
+        back_cat = f"cat|{parts[3]}"
+    else:
+        back_cat = parts[2]
     item = ALL_ITEMS.get(item_id)
 
     if not item:
